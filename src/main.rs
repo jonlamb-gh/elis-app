@@ -13,11 +13,11 @@ use std::env::args;
 mod items_model;
 mod notebook;
 
+use elis::*;
+use items_model::{add_item_to_model, ItemsModel};
+use notebook::NoteBook;
 use std::cell::RefCell;
 use std::rc::Rc;
-use elis::*;
-use items_model::{ItemsModel, add_item_to_model};
-use notebook::NoteBook;
 
 // make moving clones into closures more convenient
 macro_rules! clone {
