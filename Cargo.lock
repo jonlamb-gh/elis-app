@@ -89,6 +89,7 @@ version = "0.0.1"
 dependencies = [
  "elis-lib 0.0.1 (git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel)",
  "gio 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glib 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
