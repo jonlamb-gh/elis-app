@@ -1,25 +1,20 @@
-use glib::object::Cast;
 use gtk::prelude::*;
-use gtk::{self, Type, Widget};
+use gtk::{self, Type};
 
 use elis::*;
 
-use notebook::NoteBook;
-
+#[derive(Clone)]
 pub struct ItemsModel {
     pub scrolled_win: gtk::ScrolledWindow,
-    pub vertical_layout: gtk::Box,
     pub tree_view: gtk::TreeView,
     pub list_store: gtk::ListStore,
     pub columns: Vec<gtk::TreeViewColumn>,
-    pub new_item_button: gtk::Button,
 }
 
 impl ItemsModel {
-    pub fn new(items: &[BillableItem], note: &mut NoteBook) -> Self {
+    pub fn new() -> Self {
         let scrolled_win = gtk::ScrolledWindow::new(None, None);
         let tree_view = gtk::TreeView::new();
-        let new_item_button = gtk::Button::new_with_label("Add Item");
 
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
@@ -41,36 +36,15 @@ impl ItemsModel {
         append_column("fob <LOCATION>", &mut columns, &tree_view, None);
         append_column("Cost", &mut columns, &tree_view, None);
 
-        for item in items {
-            add_item_to_model(item, &list_store);
-        }
-
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
         scrolled_win.add(&tree_view);
 
-        let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let horizontal_layout = gtk::Grid::new();
-
-        new_item_button.set_sensitive(true);
-
-        vertical_layout.pack_start(&scrolled_win, true, true, 0);
-        horizontal_layout.attach(&new_item_button, 0, 0, 2, 1);
-        horizontal_layout.set_column_homogeneous(true);
-        vertical_layout.pack_start(&horizontal_layout, false, true, 0);
-
-        let vertical_layout: Widget = vertical_layout.upcast();
-        note.create_tab("New Invoice", &vertical_layout);
-
         ItemsModel {
             scrolled_win,
-            vertical_layout: vertical_layout
-                .downcast::<gtk::Box>()
-                .expect("downcast failed"),
             tree_view,
             list_store,
             columns,
-            new_item_button,
         }
     }
 }

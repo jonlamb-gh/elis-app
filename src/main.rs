@@ -11,13 +11,13 @@ use gtk::prelude::*;
 use std::env::args;
 
 mod items_model;
+mod new_invoice_model;
 mod notebook;
 
 use elis::*;
-use items_model::{add_item_to_model, ItemsModel};
+use items_model::add_item_to_model;
+use new_invoice_model::NewInvoiceModel;
 use notebook::NoteBook;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 // make moving clones into closures more convenient
 macro_rules! clone {
@@ -48,11 +48,9 @@ fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     let mut note = NoteBook::new();
 
-    // TODO - move to top level app struct
-    let invoice: Rc<RefCell<Invoice>> = Rc::new(RefCell::new(Invoice::new()));
+    let new_invoice_model = NewInvoiceModel::new(&mut note);
 
-    let items_model = ItemsModel::new(&[], &mut note);
-    let new_item_button = items_model.new_item_button.clone();
+    let new_item_button = new_invoice_model.new_item_button.clone();
 
     window.set_title("ELIS");
     window.set_border_width(10);
@@ -71,11 +69,11 @@ fn build_ui(application: &gtk::Application) {
     window.show_all();
     window.activate();
 
-    let list_store = items_model.list_store.clone();
-    new_item_button.connect_clicked(clone!(invoice => move |_| {
+    let list_store = new_invoice_model.items_model.list_store.clone();
+    new_item_button.connect_clicked(clone!(new_invoice_model => move |_| {
         let item = BillableItem::new();
-        invoice.borrow_mut().add_billable_item(item);
-        update_window(&invoice.borrow(), &list_store);
+        new_invoice_model.invoice.borrow_mut().add_billable_item(item);
+        update_window(&new_invoice_model.invoice.borrow(), &list_store);
     }));
 }
 
