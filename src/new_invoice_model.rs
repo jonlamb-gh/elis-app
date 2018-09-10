@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use elis::*;
 
+use invoice_summary_model::InvoiceSummaryModel;
 use items_model::{add_item_to_model, ItemId, ItemsModel};
 use notebook::NoteBook;
 
@@ -16,6 +17,7 @@ pub struct NewInvoiceModel {
     pub edit_item_button: gtk::Button,
     pub delete_item_button: gtk::Button,
     pub items_model: ItemsModel,
+    pub summary_model: InvoiceSummaryModel,
     pub invoice: Rc<RefCell<Invoice>>,
     pub selected_item_id: Rc<Cell<Option<ItemId>>>,
 }
@@ -23,32 +25,39 @@ pub struct NewInvoiceModel {
 impl NewInvoiceModel {
     pub fn new(note: &mut NoteBook) -> Self {
         let invoice = Rc::new(RefCell::new(Invoice::new()));
+        let items_model = ItemsModel::new();
+        let summary_model = InvoiceSummaryModel::new();
         let new_item_button = gtk::Button::new_with_label("Add");
         let edit_item_button = gtk::Button::new_with_label("Edit");
         let delete_item_button = gtk::Button::new_with_label("Delete");
-        let items_model = ItemsModel::new();
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let horizontal_layout = gtk::Grid::new();
         let selected_item_id = Rc::new(Cell::new(None));
+
+        summary_model.update_model(&Summary::default());
 
         new_item_button.set_sensitive(true);
         edit_item_button.set_sensitive(false);
         delete_item_button.set_sensitive(false);
 
         let list_store = items_model.list_store.clone();
-        new_item_button.connect_clicked(clone!(invoice => move |_| {
+        new_item_button.connect_clicked(clone!(invoice, summary_model => move |_| {
             let item = BillableItem::new();
             invoice.borrow_mut().add_billable_item(item);
             refresh_items_model(&invoice.borrow(), &list_store);
+                summary_model.update_model(&invoice.borrow().summary());
         }));
 
         let list_store = items_model.list_store.clone();
-        delete_item_button.connect_clicked(clone!(invoice, selected_item_id => move |_| {
+        delete_item_button.connect_clicked(
+            clone!(invoice, selected_item_id, summary_model => move |_| {
             if let Some(item_id) = selected_item_id.get() {
                 invoice.borrow_mut().remove_billable_item(item_id);
                 refresh_items_model(&invoice.borrow(), &list_store);
+                summary_model.update_model(&invoice.borrow().summary());
             }
-        }));
+        }),
+        );
 
         items_model.tree_view.connect_cursor_changed(
             clone!(edit_item_button, delete_item_button, selected_item_id => move |tree_view| {
@@ -75,6 +84,7 @@ impl NewInvoiceModel {
         horizontal_layout.attach(&delete_item_button, 2, 0, 1, 1);
         horizontal_layout.set_column_homogeneous(false);
         vertical_layout.pack_start(&horizontal_layout, false, true, 0);
+        vertical_layout.pack_start(&summary_model.tree_view, false, false, 0);
 
         let vertical_layout: Widget = vertical_layout.upcast();
         note.create_tab("New Invoice", &vertical_layout);
@@ -87,6 +97,7 @@ impl NewInvoiceModel {
             edit_item_button,
             delete_item_button,
             items_model,
+            summary_model,
             invoice,
             selected_item_id,
         }

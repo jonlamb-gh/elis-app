@@ -12,6 +12,7 @@ use std::env::args;
 
 #[macro_use]
 mod macros;
+mod invoice_summary_model;
 mod items_model;
 mod new_invoice_model;
 mod notebook;
@@ -24,7 +25,7 @@ fn build_ui(application: &gtk::Application) {
     let mut note = NoteBook::new();
     let _new_invoice_model = NewInvoiceModel::new(&mut note);
 
-    window.set_title("ELIS");
+    window.set_title("Electronic Lumber Invoice System (ELIS V0.0.1)");
     window.set_border_width(10);
     window.set_position(gtk::WindowPosition::Center);
     window.set_default_size(768, 432);
