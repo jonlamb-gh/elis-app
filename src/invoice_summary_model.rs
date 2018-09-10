@@ -1,7 +1,6 @@
-use gtk::prelude::*;
-use gtk::{self, Type};
-
 use elis::*;
+use gtk::prelude::*;
+use gtk::{self, SelectionMode, Type};
 
 #[derive(Clone)]
 pub struct InvoiceSummaryModel {
@@ -31,6 +30,8 @@ impl InvoiceSummaryModel {
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
+        tree_view.set_headers_clickable(false);
+        tree_view.get_selection().set_mode(SelectionMode::None);
 
         InvoiceSummaryModel {
             tree_view,
@@ -59,7 +60,7 @@ impl InvoiceSummaryModel {
 fn append_column(
     title: &str,
     v: &mut Vec<gtk::TreeViewColumn>,
-    left_tree: &gtk::TreeView,
+    tree_view: &gtk::TreeView,
     max_width: Option<i32>,
 ) {
     let id = v.len() as i32;
@@ -72,11 +73,11 @@ fn append_column(
         column.set_max_width(max_width);
         column.set_expand(true);
     }
-    column.set_min_width(10);
+    column.set_min_width(50);
     column.pack_start(&renderer, true);
     column.add_attribute(&renderer, "text", id);
     column.set_clickable(false);
     column.set_sort_column_id(id);
-    left_tree.append_column(&column);
+    tree_view.append_column(&column);
     v.push(column);
 }
