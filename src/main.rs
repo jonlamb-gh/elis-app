@@ -10,52 +10,24 @@ use gtk::prelude::*;
 
 use std::env::args;
 
+#[macro_use]
+mod macros;
 mod items_model;
 mod new_invoice_model;
 mod notebook;
 
-use elis::*;
-use items_model::add_item_to_model;
 use new_invoice_model::NewInvoiceModel;
 use notebook::NoteBook;
-
-// make moving clones into closures more convenient
-macro_rules! clone {
-    (@param _) => ( _ );
-    (@param $x:ident) => ( $x );
-    ($($n:ident),+ => move || $body:expr) => (
-        {
-            $( let $n = $n.clone(); )+
-            move || $body
-        }
-    );
-    ($($n:ident),+ => move |$($p:tt),+| $body:expr) => (
-        {
-            $( let $n = $n.clone(); )+
-            move |$(clone!(@param $p),)+| $body
-        }
-    );
-}
-
-fn update_window(invoice: &Invoice, list: &gtk::ListStore) {
-    list.clear();
-    for item in invoice.items() {
-        add_item_to_model(item, list);
-    }
-}
 
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     let mut note = NoteBook::new();
-
-    let new_invoice_model = NewInvoiceModel::new(&mut note);
-
-    let new_item_button = new_invoice_model.new_item_button.clone();
+    let _new_invoice_model = NewInvoiceModel::new(&mut note);
 
     window.set_title("ELIS");
     window.set_border_width(10);
     window.set_position(gtk::WindowPosition::Center);
-    window.set_default_size(640, 480);
+    window.set_default_size(768, 432);
 
     window.connect_delete_event(clone!(window => move |_, _| {
         window.destroy();
@@ -68,13 +40,6 @@ fn build_ui(application: &gtk::Application) {
 
     window.show_all();
     window.activate();
-
-    let list_store = new_invoice_model.items_model.list_store.clone();
-    new_item_button.connect_clicked(clone!(new_invoice_model => move |_| {
-        let item = BillableItem::new();
-        new_invoice_model.invoice.borrow_mut().add_billable_item(item);
-        update_window(&new_invoice_model.invoice.borrow(), &list_store);
-    }));
 }
 
 fn main() {

@@ -3,6 +3,8 @@ use gtk::{self, Type};
 
 use elis::*;
 
+pub type ItemId = usize;
+
 #[derive(Clone)]
 pub struct ItemsModel {
     pub scrolled_win: gtk::ScrolledWindow,
@@ -19,13 +21,17 @@ impl ItemsModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String,
-            Type::String,
-            Type::String,
-            Type::U32,
-            Type::String,
-            Type::String,
-            Type::String,
+            // these are the visible columns
+            Type::String, // lumber type
+            Type::String, // description
+            Type::String, // dimensions
+            Type::U32,    // quantity
+            Type::String, // board feet
+            Type::String, // fob <location>
+            Type::String, // cost
+            // last column is hidden
+            // it contains the item ID (usually vector index)
+            Type::U32, // item_id
         ]);
 
         append_column("Lumber Type", &mut columns, &tree_view, None);
@@ -81,10 +87,10 @@ fn append_column(
     v.push(column);
 }
 
-pub fn add_item_to_model(item: &BillableItem, list_store: &gtk::ListStore) {
+pub fn add_item_to_model(item: &BillableItem, item_id: ItemId, list_store: &gtk::ListStore) {
     list_store.insert_with_values(
         None,
-        &[0, 1, 2, 3, 4, 5, 6],
+        &[0, 1, 2, 3, 4, 5, 6, 7],
         &[
             &item.lumber_type().to_str(),
             &item.description(),
@@ -94,6 +100,7 @@ pub fn add_item_to_model(item: &BillableItem, list_store: &gtk::ListStore) {
             &format!("{:.3}", item.board_dimensions().board_feet()),
             &format!("{}", item.lumber_type().fob_price()),
             &format!("{}", item.cost()),
+            &(item_id as u32),
         ],
     );
 }
