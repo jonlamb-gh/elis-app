@@ -22,6 +22,7 @@ mod new_customer_page;
 mod new_invoice_page;
 mod notebook;
 mod order_info_model;
+mod site_info_model;
 mod site_info_page;
 
 use customer_search_page::CustomerSearchPage;
