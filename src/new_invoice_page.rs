@@ -11,25 +11,27 @@ use items_model::{add_item_to_model, ItemId, ItemsModel};
 use notebook::NoteBook;
 
 #[derive(Clone)]
-pub struct NewInvoiceModel {
+pub struct NewInvoicePage {
     pub vertical_layout: gtk::Box,
     pub new_item_button: gtk::Button,
-    pub edit_item_button: gtk::Button,
     pub delete_item_button: gtk::Button,
+    pub clear_invoice_button: gtk::Button,
+    pub review_submit_button: gtk::Button,
     pub items_model: ItemsModel,
     pub summary_model: InvoiceSummaryModel,
     pub invoice: Rc<RefCell<Invoice>>,
     pub selected_item_id: Rc<Cell<Option<ItemId>>>,
 }
 
-impl NewInvoiceModel {
+impl NewInvoicePage {
     pub fn new(note: &mut NoteBook) -> Self {
         let invoice = Rc::new(RefCell::new(Invoice::new()));
         let items_model = ItemsModel::new();
         let summary_model = InvoiceSummaryModel::new();
         let new_item_button = gtk::Button::new_with_label("Add");
-        let edit_item_button = gtk::Button::new_with_label("Edit");
         let delete_item_button = gtk::Button::new_with_label("Delete");
+        let clear_invoice_button = gtk::Button::new_with_label("Clear Invoice");
+        let review_submit_button = gtk::Button::new_with_label("Review and Submit");
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let horizontal_layout = gtk::Grid::new();
         let selected_item_id = Rc::new(Cell::new(None));
@@ -37,15 +39,17 @@ impl NewInvoiceModel {
         summary_model.update_model(&Summary::default());
 
         new_item_button.set_sensitive(true);
-        edit_item_button.set_sensitive(false);
         delete_item_button.set_sensitive(false);
+        clear_invoice_button.set_sensitive(true);
+        review_submit_button.set_sensitive(false);
 
+        // TODO - refactor a global refresh routine
         let list_store = items_model.list_store.clone();
         new_item_button.connect_clicked(clone!(invoice, summary_model => move |_| {
             let item = BillableItem::new();
             invoice.borrow_mut().add_billable_item(item);
             refresh_items_model(&invoice.borrow(), &list_store);
-                summary_model.update_model(&invoice.borrow().summary());
+            summary_model.update_model(&invoice.borrow().summary());
         }));
 
         let list_store = items_model.list_store.clone();
@@ -59,8 +63,15 @@ impl NewInvoiceModel {
         }),
         );
 
+        let list_store = items_model.list_store.clone();
+        clear_invoice_button.connect_clicked(clone!(invoice, summary_model => move |_| {
+            invoice.borrow_mut().remove_billable_items();
+            refresh_items_model(&invoice.borrow(), &list_store);
+            summary_model.update_model(&invoice.borrow().summary());
+        }));
+
         items_model.tree_view.connect_cursor_changed(
-            clone!(edit_item_button, delete_item_button, selected_item_id => move |tree_view| {
+            clone!(delete_item_button, selected_item_id => move |tree_view| {
             let selection = tree_view.get_selection();
             let (id, selected) = if let Some((model, iter)) = selection.get_selected() {
                 if let Some(x) = model.get_value(&iter, 7).get::<u32>().map(|x| x as ItemId) {
@@ -73,15 +84,15 @@ impl NewInvoiceModel {
             };
 
             selected_item_id.set(id);
-            edit_item_button.set_sensitive(selected);
             delete_item_button.set_sensitive(selected);
         }),
         );
 
         vertical_layout.pack_start(&items_model.scrolled_win, true, true, 0);
         horizontal_layout.attach(&new_item_button, 0, 0, 1, 1);
-        horizontal_layout.attach(&edit_item_button, 1, 0, 1, 1);
-        horizontal_layout.attach(&delete_item_button, 2, 0, 1, 1);
+        horizontal_layout.attach(&delete_item_button, 1, 0, 1, 1);
+        horizontal_layout.attach(&clear_invoice_button, 2, 0, 1, 1);
+        horizontal_layout.attach(&review_submit_button, 3, 0, 1, 1);
         horizontal_layout.set_column_homogeneous(false);
         vertical_layout.pack_start(&horizontal_layout, false, true, 0);
         vertical_layout.pack_start(&summary_model.tree_view, false, false, 0);
@@ -89,13 +100,14 @@ impl NewInvoiceModel {
         let vertical_layout: Widget = vertical_layout.upcast();
         note.create_tab("New Invoice", &vertical_layout);
 
-        NewInvoiceModel {
+        NewInvoicePage {
             vertical_layout: vertical_layout
                 .downcast::<gtk::Box>()
                 .expect("Virtical layout downcast failed"),
             new_item_button,
-            edit_item_button,
             delete_item_button,
+            clear_invoice_button,
+            review_submit_button,
             items_model,
             summary_model,
             invoice,
