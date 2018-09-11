@@ -42,7 +42,7 @@ impl NewInvoicePage {
         let selected_item_id = Rc::new(Cell::new(None));
 
         order_info_model.update_model(&OrderInfo::default());
-        summary_model.update_model(&Summary::default());
+        summary_model.update_model(&InvoiceSummary::default());
 
         new_item_button.set_sensitive(true);
         delete_item_button.set_sensitive(false);

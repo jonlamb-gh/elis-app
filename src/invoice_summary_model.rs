@@ -1,5 +1,5 @@
 use elis::steel_cent::formatting::us_style;
-use elis::Summary;
+use elis::InvoiceSummary;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
 
@@ -41,7 +41,7 @@ impl InvoiceSummaryModel {
         }
     }
 
-    pub fn update_model(&self, summary: &Summary) {
+    pub fn update_model(&self, summary: &InvoiceSummary) {
         self.list_store.clear();
         self.list_store.insert_with_values(
             None,
