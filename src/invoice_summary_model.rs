@@ -1,4 +1,5 @@
-use elis::*;
+use elis::steel_cent::formatting::us_style;
+use elis::Summary;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
 
@@ -47,10 +48,13 @@ impl InvoiceSummaryModel {
             &[0, 1, 2, 3, 4],
             &[
                 &(summary.total_pieces() as u32),
-                &format!("{}", summary.estimated_shipping_cost()),
-                &format!("{}", summary.sub_total_cost()),
-                &format!("{}", summary.sales_tax_cost()),
-                &format!("{}", summary.total_cost()),
+                &format!(
+                    "{}",
+                    us_style().display_for(summary.estimated_shipping_cost())
+                ),
+                &format!("{}", us_style().display_for(summary.sub_total_cost())),
+                &format!("{}", us_style().display_for(summary.sales_tax_cost())),
+                &format!("{}", us_style().display_for(summary.total_cost())),
             ],
         );
     }

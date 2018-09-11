@@ -1,7 +1,8 @@
+use elis::steel_cent::formatting::us_style;
 use gtk::prelude::*;
 use gtk::{self, Type};
 
-use elis::*;
+use elis::BillableItem;
 
 pub type ItemId = usize;
 
@@ -17,7 +18,6 @@ impl ItemsModel {
     pub fn new() -> Self {
         let scrolled_win = gtk::ScrolledWindow::new(None, None);
         let tree_view = gtk::TreeView::new();
-
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
@@ -94,8 +94,11 @@ pub fn add_item_to_model(item: &BillableItem, item_id: ItemId, list_store: &gtk:
             &(item.quantity() as u32),
             // TODO - config
             &format!("{:.3}", item.board_dimensions().board_feet()),
-            &format!("{}", item.lumber_type().fob_price()),
-            &format!("{}", item.cost()),
+            &format!(
+                "{}",
+                us_style().display_for(&item.lumber_type().fob_price())
+            ),
+            &format!("{}", us_style().display_for(&item.cost())),
             &(item_id as u32),
         ],
     );

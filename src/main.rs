@@ -18,6 +18,7 @@ mod customer_search_page;
 mod invoice_search_page;
 mod invoice_summary_model;
 mod items_model;
+mod lumber_type_model;
 mod new_customer_page;
 mod new_invoice_page;
 mod notebook;
