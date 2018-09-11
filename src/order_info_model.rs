@@ -54,8 +54,8 @@ impl OrderInfoModel {
                 &format!("{}", order_info.confirms_with()),
                 &order_info.order_number(),
                 &format!("{}", order_info.weight_estimate()),
-                &format!("{}", order_info.order_date()),
-                &format!("{}", order_info.shipment_date()),
+                &format!("{}", order_info.order_date().format("%m/%d/%Y")),
+                &format!("{}", order_info.shipment_date().format("%m/%d/%Y")),
                 &order_info.will_call(),
             ],
         );
@@ -71,6 +71,7 @@ fn append_column(
 ) {
     let id = v.len() as i32;
     let renderer = gtk::CellRendererText::new();
+    renderer.set_property_xalign(0.5);
 
     let column = gtk::TreeViewColumn::new();
     column.set_title(title);

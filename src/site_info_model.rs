@@ -50,7 +50,7 @@ impl SiteInfoModel {
                 &site_info.address(),
                 &site_info.phone_number(),
                 &site_info.fax_number(),
-                &format!("{}", site_info.sales_tax()),
+                &format!("{:.3} %", site_info.sales_tax()),
             ],
         );
     }
@@ -65,6 +65,10 @@ fn append_column(
 ) {
     let id = v.len() as i32;
     let renderer = gtk::CellRendererText::new();
+
+    if title != "Sales Tax" {
+        renderer.set_property_xalign(0.5);
+    }
 
     let column = gtk::TreeViewColumn::new();
     column.set_title(title);
