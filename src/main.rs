@@ -14,6 +14,7 @@ use std::env::args;
 #[macro_use]
 mod macros;
 mod customer_search_page;
+mod invoice_query_results_model;
 mod invoice_search_page;
 mod invoice_summary_model;
 mod items_model;
@@ -37,7 +38,7 @@ fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     let mut note = NoteBook::new();
     let new_invoice_page = NewInvoicePage::new(&mut note);
-    let _invoice_search_page = InvoiceSearchPage::new(&mut note);
+    let invoice_search_page = InvoiceSearchPage::new(&mut note);
     let _new_customer_page = NewCustomerPage::new(&mut note);
     let _customer_search_page = CustomerSearchPage::new(&mut note);
     let _site_info_page = SiteInfoPage::new(&mut note);
@@ -61,6 +62,21 @@ fn build_ui(application: &gtk::Application) {
 
         db.save().expect("Failed to save database");
     }));
+
+    // TODO - ok to clone db?
+    /*
+    note.notebook
+        .connect_switch_page(clone!(db => move |_nb, _page, page_index| {
+            println!("switch-page : page = {}", page_index);
+
+            if page_index == invoice_search_page.page_index {
+                println!("TODO - load invoices/etc from db");
+                db.read(|db| {
+                    invoice_search_page.set_results(db.invoices.values());
+                }).expect("Failed to read from database");
+            }
+        }));
+    */
 
     window.set_title("ELIS 0.0.1");
     window.set_border_width(10);
