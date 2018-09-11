@@ -48,7 +48,7 @@ impl NewInvoicePage {
         delete_item_button.set_sensitive(false);
         clear_invoice_button.set_sensitive(true);
         save_pdf_button.set_sensitive(false);
-        review_submit_button.set_sensitive(false);
+        review_submit_button.set_sensitive(true);
 
         // TODO - refactor a global refresh routine
         let list_store = items_model.list_store.clone();

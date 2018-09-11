@@ -9,7 +9,6 @@ extern crate gtk;
 
 use gio::prelude::*;
 use gtk::prelude::*;
-
 use std::env::args;
 
 #[macro_use]
@@ -27,6 +26,7 @@ mod site_info_model;
 mod site_info_page;
 
 use customer_search_page::CustomerSearchPage;
+use elis::from_path as db_from_path;
 use invoice_search_page::InvoiceSearchPage;
 use new_customer_page::NewCustomerPage;
 use new_invoice_page::NewInvoicePage;
@@ -36,11 +36,31 @@ use site_info_page::SiteInfoPage;
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     let mut note = NoteBook::new();
-    let _new_invoice_page = NewInvoicePage::new(&mut note);
+    let new_invoice_page = NewInvoicePage::new(&mut note);
     let _invoice_search_page = InvoiceSearchPage::new(&mut note);
     let _new_customer_page = NewCustomerPage::new(&mut note);
     let _customer_search_page = CustomerSearchPage::new(&mut note);
     let _site_info_page = SiteInfoPage::new(&mut note);
+
+    let db = db_from_path("elis.db").expect("Failed to open database");
+
+    // TESTING
+    new_invoice_page
+        .review_submit_button
+        .connect_clicked(clone!(new_invoice_page => move |_| {
+        println!("Adding invoice to database");
+        let invoice = new_invoice_page.invoice.borrow();
+
+        db.write(|db| {
+            // TODO - check for existing key/orderNumber
+            db.invoices.insert(
+                invoice.order_info().order_number(),
+                invoice.clone(),
+            );
+        }).expect("Failed to write to database");
+
+        db.save().expect("Failed to save database");
+    }));
 
     window.set_title("ELIS 0.0.1");
     window.set_border_width(10);
