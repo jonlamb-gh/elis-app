@@ -1,7 +1,3 @@
-// TODO - break apart new invoice logic from main page
-// docs on objects:
-// https://developer.gnome.org/gtk3/stable/TreeWidgetObjects.html
-
 extern crate elis_lib as elis;
 extern crate gio;
 extern crate glib;
@@ -81,7 +77,7 @@ pub fn build_ui(application: &gtk::Application) {
         println!("Adding invoice {} to database", invoice.order_info().order_number());
 
         db.borrow().write(|db| {
-            // TODO - check for existing key/orderNumber
+            // TODO - check for existing key/orderNumber somewhere
             if ! db.invoices.contains_key(&invoice.order_info().order_number()) {
                 db.invoices.insert(
                     invoice.order_info().order_number(),
@@ -127,8 +123,7 @@ pub fn build_ui(application: &gtk::Application) {
 }
 
 fn main() {
-    // TODO - refactor
-    let application = gtk::Application::new("com.github.basic", gio::ApplicationFlags::empty())
+    let application = gtk::Application::new("ELIS", gio::ApplicationFlags::empty())
         .expect("Initialization failed");
 
     application.connect_startup(|app| {
