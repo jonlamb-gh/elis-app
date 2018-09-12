@@ -13,22 +13,21 @@ use order_info_model::OrderInfoModel;
 
 #[derive(Clone)]
 pub struct NewInvoicePage {
-    pub vertical_layout: gtk::Box,
-    pub new_item_button: gtk::Button,
-    pub delete_item_button: gtk::Button,
-    pub clear_invoice_button: gtk::Button,
-    pub save_pdf_button: gtk::Button,
+    vertical_layout: gtk::Box,
+    new_item_button: gtk::Button,
+    delete_item_button: gtk::Button,
+    clear_invoice_button: gtk::Button,
+    save_pdf_button: gtk::Button,
     pub review_submit_button: gtk::Button,
-    pub order_info_model: OrderInfoModel,
-    pub items_model: ItemsModel,
-    pub summary_model: InvoiceSummaryModel,
+    order_info_model: OrderInfoModel,
+    items_model: ItemsModel,
+    summary_model: InvoiceSummaryModel,
     pub invoice: Rc<RefCell<Invoice>>,
-    pub selected_item_id: Rc<Cell<Option<ItemId>>>,
+    selected_item_id: Rc<Cell<Option<ItemId>>>,
 }
 
 impl NewInvoicePage {
     pub fn new(note: &mut NoteBook) -> Self {
-        let invoice = Rc::new(RefCell::new(Invoice::new()));
         let order_info_model = OrderInfoModel::new();
         let items_model = ItemsModel::new();
         let summary_model = InvoiceSummaryModel::new();
@@ -40,42 +39,53 @@ impl NewInvoicePage {
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let horizontal_layout = gtk::Grid::new();
         let selected_item_id = Rc::new(Cell::new(None));
+        let invoice = Rc::new(RefCell::new(Invoice::new(1)));
 
-        order_info_model.update_model(&OrderInfo::default());
-        summary_model.update_model(&InvoiceSummary::default());
+        order_info_model.update_model(invoice.borrow().order_info());
+        summary_model.update_model(&invoice.borrow().summary());
 
         new_item_button.set_sensitive(true);
         delete_item_button.set_sensitive(false);
         clear_invoice_button.set_sensitive(true);
         save_pdf_button.set_sensitive(false);
-        review_submit_button.set_sensitive(true);
+        review_submit_button.set_sensitive(false);
 
         // TODO - refactor a global refresh routine
         let list_store = items_model.list_store.clone();
-        new_item_button.connect_clicked(clone!(invoice, summary_model => move |_| {
+        new_item_button.connect_clicked(
+            clone!(invoice, summary_model, review_submit_button => move |_| {
             let item = BillableItem::new();
             invoice.borrow_mut().add_billable_item(item);
             refresh_items_model(&invoice.borrow(), &list_store);
             summary_model.update_model(&invoice.borrow().summary());
-        }));
+            review_submit_button.set_sensitive(true);
+        }),
+        );
 
         let list_store = items_model.list_store.clone();
         delete_item_button.connect_clicked(
-            clone!(invoice, selected_item_id, summary_model => move |_| {
+            clone!(invoice, selected_item_id, summary_model, review_submit_button => move |_| {
             if let Some(item_id) = selected_item_id.get() {
                 invoice.borrow_mut().remove_billable_item(item_id);
                 refresh_items_model(&invoice.borrow(), &list_store);
                 summary_model.update_model(&invoice.borrow().summary());
             }
+
+            if invoice.borrow().items().len() == 0 {
+                review_submit_button.set_sensitive(false);
+            }
         }),
         );
 
         let list_store = items_model.list_store.clone();
-        clear_invoice_button.connect_clicked(clone!(invoice, summary_model => move |_| {
+        clear_invoice_button.connect_clicked(
+            clone!(invoice, summary_model, review_submit_button => move |_| {
+            review_submit_button.set_sensitive(false);
             invoice.borrow_mut().remove_billable_items();
             refresh_items_model(&invoice.borrow(), &list_store);
             summary_model.update_model(&invoice.borrow().summary());
-        }));
+        }),
+        );
 
         items_model.tree_view.connect_cursor_changed(
             clone!(delete_item_button, selected_item_id => move |tree_view| {
@@ -124,6 +134,17 @@ impl NewInvoicePage {
             invoice,
             selected_item_id,
         }
+    }
+
+    pub fn replace_invoice(&self, new_order_number: OrderNumber) -> Invoice {
+        let new_invoice = Invoice::new(new_order_number);
+
+        self.review_submit_button.set_sensitive(false);
+        self.order_info_model.update_model(new_invoice.order_info());
+        self.summary_model.update_model(&new_invoice.summary());
+        self.items_model.list_store.clear();
+
+        self.invoice.replace(Invoice::new(new_order_number))
     }
 }
 

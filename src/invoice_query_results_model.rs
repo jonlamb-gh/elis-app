@@ -38,8 +38,8 @@ impl InvoiceQueryResultsModel {
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
-        tree_view.set_headers_clickable(false);
-        tree_view.get_selection().set_mode(SelectionMode::None);
+        tree_view.set_headers_clickable(true);
+        tree_view.get_selection().set_mode(SelectionMode::Single);
         scrolled_win.add(&tree_view);
 
         InvoiceQueryResultsModel {
@@ -80,7 +80,10 @@ fn append_column(
 ) {
     let id = v.len() as i32;
     let renderer = gtk::CellRendererText::new();
-    renderer.set_property_xalign(0.5);
+
+    if title != "Will Call" {
+        renderer.set_property_xalign(0.5);
+    }
 
     let column = gtk::TreeViewColumn::new();
     column.set_title(title);
