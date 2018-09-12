@@ -1,8 +1,8 @@
+use elis::lumber::FobCostReader;
 use elis::steel_cent::formatting::us_style;
+use elis::BillableItem;
 use gtk::prelude::*;
 use gtk::{self, Type};
-
-use elis::BillableItem;
 
 pub type ItemId = usize;
 
@@ -10,8 +10,8 @@ pub type ItemId = usize;
 pub struct ItemsModel {
     pub scrolled_win: gtk::ScrolledWindow,
     pub tree_view: gtk::TreeView,
-    pub list_store: gtk::ListStore,
-    pub columns: Vec<gtk::TreeViewColumn>,
+    list_store: gtk::ListStore,
+    columns: Vec<gtk::TreeViewColumn>,
 }
 
 impl ItemsModel {
@@ -53,6 +53,35 @@ impl ItemsModel {
             columns,
         }
     }
+
+    pub fn clear_model(&self) {
+        self.list_store.clear();
+    }
+
+    pub fn update_model<T: FobCostReader>(
+        &self,
+        item: &BillableItem,
+        item_id: ItemId,
+        fob_reader: &T,
+    ) {
+        let fob_cost = fob_reader.fob_cost(&item.lumber_type());
+
+        self.list_store.insert_with_values(
+            None,
+            &[0, 1, 2, 3, 4, 5, 6, 7],
+            &[
+                &item.lumber_type(),
+                &item.description(),
+                &format!("{}", item.board_dimensions()),
+                &(item.quantity() as u32),
+                // TODO - config
+                &format!("{:.3}", item.board_dimensions().board_feet()),
+                &format!("{}", us_style().display_for(&fob_cost)),
+                &format!("{}", us_style().display_for(&item.cost(fob_reader))),
+                &(item_id as u32),
+            ],
+        );
+    }
 }
 
 // TODO - min/max width pattern
@@ -81,25 +110,4 @@ fn append_column(
     column.set_sort_column_id(id);
     tree_view.append_column(&column);
     v.push(column);
-}
-
-pub fn add_item_to_model(item: &BillableItem, item_id: ItemId, list_store: &gtk::ListStore) {
-    list_store.insert_with_values(
-        None,
-        &[0, 1, 2, 3, 4, 5, 6, 7],
-        &[
-            &item.lumber_type().to_str(),
-            &item.description(),
-            &format!("{}", item.board_dimensions()),
-            &(item.quantity() as u32),
-            // TODO - config
-            &format!("{:.3}", item.board_dimensions().board_feet()),
-            &format!(
-                "{}",
-                us_style().display_for(&item.lumber_type().fob_price())
-            ),
-            &format!("{}", us_style().display_for(&item.cost())),
-            &(item_id as u32),
-        ],
-    );
 }

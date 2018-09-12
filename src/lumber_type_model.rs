@@ -1,7 +1,10 @@
 use elis::steel_cent::formatting::us_style;
-use elis::LumberType;
+//use elis::lumber::{LumberType};
+use elis::Database;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct LumberTypeModel {
@@ -9,10 +12,11 @@ pub struct LumberTypeModel {
     tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
+    db: Rc<RefCell<Database>>,
 }
 
 impl LumberTypeModel {
-    pub fn new() -> Self {
+    pub fn new(db: Rc<RefCell<Database>>) -> Self {
         let scrolled_win = gtk::ScrolledWindow::new(None, None);
         let tree_view = gtk::TreeView::new();
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
@@ -36,22 +40,27 @@ impl LumberTypeModel {
             tree_view,
             list_store,
             columns,
+            db,
         }
     }
 
     pub fn update_model(&self) {
         self.list_store.clear();
 
-        for lt in LumberType::enumerate() {
-            self.list_store.insert_with_values(
-                None,
-                &[0, 1],
-                &[
-                    &lt.to_str(),
-                    &format!("{}", us_style().display_for(&lt.fob_price())),
-                ],
-            );
-        }
+        self.db
+            .borrow()
+            .read(|db| {
+                for lt in db.lumber_types.values() {
+                    self.list_store.insert_with_values(
+                        None,
+                        &[0, 1],
+                        &[
+                            &lt.type_name(),
+                            &format!("{}", us_style().display_for(lt.fob_cost())),
+                        ],
+                    );
+                }
+            }).expect("Failed to read from database");
     }
 }
 

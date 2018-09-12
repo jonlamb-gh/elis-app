@@ -15,12 +15,13 @@ impl OrderInfoModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String, // customer
+            Type::String, // customer name
             Type::String, // confirms with
             Type::U32,    // order number
             Type::String, // est weight
             Type::String, // order date
             Type::String, // shipment date
+            Type::String, // site name
             Type::Bool,   // will call
         ]);
 
@@ -30,6 +31,7 @@ impl OrderInfoModel {
         append_column("Est Weight", &mut columns, &tree_view, None);
         append_column("Order Date", &mut columns, &tree_view, None);
         append_column("Shipment Date", &mut columns, &tree_view, None);
+        append_column("Site", &mut columns, &tree_view, None);
         append_column("Will Call", &mut columns, &tree_view, None);
 
         tree_view.set_model(Some(&list_store));
@@ -48,14 +50,15 @@ impl OrderInfoModel {
         self.list_store.clear();
         self.list_store.insert_with_values(
             None,
-            &[0, 1, 2, 3, 4, 5, 6],
+            &[0, 1, 2, 3, 4, 5, 6, 7],
             &[
-                &format!("{}", order_info.customer()),
+                &format!("{}", order_info.customer_name()),
                 &format!("{}", order_info.confirms_with()),
                 &order_info.order_number(),
                 &format!("{}", order_info.weight_estimate()),
                 &format!("{}", order_info.order_date().format("%m/%d/%Y")),
                 &format!("{}", order_info.shipment_date().format("%m/%d/%Y")),
+                &format!("{}", order_info.site_name()),
                 &order_info.will_call(),
             ],
         );

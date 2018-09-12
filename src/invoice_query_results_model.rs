@@ -1,5 +1,6 @@
 // TODO - make order info model capable of this, copy
 
+use elis::lumber::FobCostReader;
 use elis::steel_cent::formatting::us_style;
 use elis::Invoice;
 use gtk::prelude::*;
@@ -55,16 +56,16 @@ impl InvoiceQueryResultsModel {
         self.list_store.clear();
     }
 
-    pub fn update_model(&self, invoice: &Invoice) {
+    pub fn update_model<T: FobCostReader>(&self, invoice: &Invoice, fob_reader: &T) {
         let order_info = invoice.order_info();
-        let summary = invoice.summary();
+        let summary = invoice.summary(fob_reader);
 
         self.list_store.insert_with_values(
             None,
             &[0, 1, 2, 3, 4, 5, 6],
             &[
                 &order_info.order_number(),
-                &format!("{}", order_info.customer()),
+                &format!("{}", order_info.customer_name()),
                 &format!("{}", order_info.order_date().format("%m/%d/%Y")),
                 &format!("{}", order_info.shipment_date().format("%m/%d/%Y")),
                 &order_info.will_call(),
