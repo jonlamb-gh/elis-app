@@ -71,7 +71,7 @@ pub fn build_ui(application: &gtk::Application) {
     }
 
     // TODO -  read notes on rustbreak panics in closures, corrupts db
-    new_invoice_page.review_submit_button.connect_clicked(
+    new_invoice_page.save_invoice_button.connect_clicked(
         clone!(db, new_invoice_page, next_order_number => move |_| {
 
         let next_order_num = next_order_number.get();

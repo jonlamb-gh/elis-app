@@ -39,7 +39,7 @@ impl InvoiceSearchPage {
         self.results_model.clear_model();
 
         for inv in invoices {
-            self.results_model.update_model(inv.order_info());
+            self.results_model.update_model(inv);
         }
     }
 }

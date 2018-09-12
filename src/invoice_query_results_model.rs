@@ -1,6 +1,7 @@
 // TODO - make order info model capable of this, copy
 
-use elis::*;
+use elis::steel_cent::formatting::us_style;
+use elis::Invoice;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
 
@@ -19,22 +20,22 @@ impl InvoiceQueryResultsModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String, // customer
-            Type::String, // confirms with
             Type::U32,    // order number
-            Type::String, // est weight
+            Type::String, // customer
             Type::String, // order date
             Type::String, // shipment date
             Type::Bool,   // will call
+            Type::U32,    // total pieces
+            Type::String, // total cost
         ]);
 
-        append_column("Customer", &mut columns, &tree_view, None);
-        append_column("Confirms with", &mut columns, &tree_view, None);
         append_column("Order Number", &mut columns, &tree_view, None);
-        append_column("Est Weight", &mut columns, &tree_view, None);
+        append_column("Customer", &mut columns, &tree_view, None);
         append_column("Order Date", &mut columns, &tree_view, None);
         append_column("Shipment Date", &mut columns, &tree_view, None);
         append_column("Will Call", &mut columns, &tree_view, None);
+        append_column("Total Pieces", &mut columns, &tree_view, None);
+        append_column("Total Cost", &mut columns, &tree_view, None);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
@@ -54,18 +55,21 @@ impl InvoiceQueryResultsModel {
         self.list_store.clear();
     }
 
-    pub fn update_model(&self, order_info: &OrderInfo) {
+    pub fn update_model(&self, invoice: &Invoice) {
+        let order_info = invoice.order_info();
+        let summary = invoice.summary();
+
         self.list_store.insert_with_values(
             None,
             &[0, 1, 2, 3, 4, 5, 6],
             &[
-                &format!("{}", order_info.customer()),
-                &format!("{}", order_info.confirms_with()),
                 &order_info.order_number(),
-                &format!("{}", order_info.weight_estimate()),
+                &format!("{}", order_info.customer()),
                 &format!("{}", order_info.order_date().format("%m/%d/%Y")),
                 &format!("{}", order_info.shipment_date().format("%m/%d/%Y")),
                 &order_info.will_call(),
+                &(summary.total_pieces() as u32),
+                &format!("{}", us_style().display_for(summary.total_cost())),
             ],
         );
     }
@@ -81,7 +85,11 @@ fn append_column(
     let id = v.len() as i32;
     let renderer = gtk::CellRendererText::new();
 
-    if title != "Will Call" {
+    if title == "Order Number" {
+        renderer.set_property_xalign(1.0);
+    } else if title == "Total Cost" {
+        renderer.set_property_xalign(0.0);
+    } else {
         renderer.set_property_xalign(0.5);
     }
 

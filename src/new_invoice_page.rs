@@ -17,8 +17,7 @@ pub struct NewInvoicePage {
     new_item_button: gtk::Button,
     delete_item_button: gtk::Button,
     clear_invoice_button: gtk::Button,
-    save_pdf_button: gtk::Button,
-    pub review_submit_button: gtk::Button,
+    pub save_invoice_button: gtk::Button,
     order_info_model: OrderInfoModel,
     items_model: ItemsModel,
     summary_model: InvoiceSummaryModel,
@@ -34,8 +33,7 @@ impl NewInvoicePage {
         let new_item_button = gtk::Button::new_with_label("Add");
         let delete_item_button = gtk::Button::new_with_label("Delete");
         let clear_invoice_button = gtk::Button::new_with_label("Clear Invoice");
-        let save_pdf_button = gtk::Button::new_with_label("Save PDF");
-        let review_submit_button = gtk::Button::new_with_label("Review and Submit");
+        let save_invoice_button = gtk::Button::new_with_label("Save Invoice");
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let horizontal_layout = gtk::Grid::new();
         let selected_item_id = Rc::new(Cell::new(None));
@@ -47,24 +45,23 @@ impl NewInvoicePage {
         new_item_button.set_sensitive(true);
         delete_item_button.set_sensitive(false);
         clear_invoice_button.set_sensitive(true);
-        save_pdf_button.set_sensitive(false);
-        review_submit_button.set_sensitive(false);
+        save_invoice_button.set_sensitive(false);
 
         // TODO - refactor a global refresh routine
         let list_store = items_model.list_store.clone();
         new_item_button.connect_clicked(
-            clone!(invoice, summary_model, review_submit_button => move |_| {
+            clone!(invoice, summary_model, save_invoice_button => move |_| {
             let item = BillableItem::new();
             invoice.borrow_mut().add_billable_item(item);
             refresh_items_model(&invoice.borrow(), &list_store);
             summary_model.update_model(&invoice.borrow().summary());
-            review_submit_button.set_sensitive(true);
+            save_invoice_button.set_sensitive(true);
         }),
         );
 
         let list_store = items_model.list_store.clone();
         delete_item_button.connect_clicked(
-            clone!(invoice, selected_item_id, summary_model, review_submit_button => move |_| {
+            clone!(invoice, selected_item_id, summary_model, save_invoice_button => move |_| {
             if let Some(item_id) = selected_item_id.get() {
                 invoice.borrow_mut().remove_billable_item(item_id);
                 refresh_items_model(&invoice.borrow(), &list_store);
@@ -72,15 +69,15 @@ impl NewInvoicePage {
             }
 
             if invoice.borrow().items().len() == 0 {
-                review_submit_button.set_sensitive(false);
+                save_invoice_button.set_sensitive(false);
             }
         }),
         );
 
         let list_store = items_model.list_store.clone();
         clear_invoice_button.connect_clicked(
-            clone!(invoice, summary_model, review_submit_button => move |_| {
-            review_submit_button.set_sensitive(false);
+            clone!(invoice, summary_model, save_invoice_button => move |_| {
+            save_invoice_button.set_sensitive(false);
             invoice.borrow_mut().remove_billable_items();
             refresh_items_model(&invoice.borrow(), &list_store);
             summary_model.update_model(&invoice.borrow().summary());
@@ -110,8 +107,7 @@ impl NewInvoicePage {
         horizontal_layout.attach(&new_item_button, 0, 0, 1, 1);
         horizontal_layout.attach(&delete_item_button, 1, 0, 1, 1);
         horizontal_layout.attach(&clear_invoice_button, 2, 0, 1, 1);
-        horizontal_layout.attach(&save_pdf_button, 3, 0, 1, 1);
-        horizontal_layout.attach(&review_submit_button, 4, 0, 1, 1);
+        horizontal_layout.attach(&save_invoice_button, 3, 0, 1, 1);
         horizontal_layout.set_column_homogeneous(false);
         vertical_layout.pack_start(&horizontal_layout, false, true, 0);
         vertical_layout.pack_start(&summary_model.tree_view, false, false, 0);
@@ -126,8 +122,7 @@ impl NewInvoicePage {
             new_item_button,
             delete_item_button,
             clear_invoice_button,
-            save_pdf_button,
-            review_submit_button,
+            save_invoice_button,
             order_info_model,
             items_model,
             summary_model,
@@ -139,7 +134,7 @@ impl NewInvoicePage {
     pub fn replace_invoice(&self, new_order_number: OrderNumber) -> Invoice {
         let new_invoice = Invoice::new(new_order_number);
 
-        self.review_submit_button.set_sensitive(false);
+        self.save_invoice_button.set_sensitive(false);
         self.order_info_model.update_model(new_invoice.order_info());
         self.summary_model.update_model(&new_invoice.summary());
         self.items_model.list_store.clear();
