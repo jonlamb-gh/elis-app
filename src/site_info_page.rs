@@ -1,4 +1,4 @@
-use elis::{Database, SiteInfo};
+use elis::Database;
 use gtk::prelude::*;
 use gtk::{self, Widget};
 use std::cell::RefCell;
@@ -18,11 +18,11 @@ pub struct SiteInfoPage {
 
 impl SiteInfoPage {
     pub fn new(note: &mut NoteBook, db: Rc<RefCell<Database>>) -> Self {
-        let site_info_model = SiteInfoModel::new();
-        let lumber_type_model = LumberTypeModel::new(db);
+        let site_info_model = SiteInfoModel::new(db.clone());
+        let lumber_type_model = LumberTypeModel::new(db.clone());
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
-        site_info_model.update_model(&SiteInfo::new());
+        site_info_model.update_model();
         lumber_type_model.update_model();
 
         vertical_layout.pack_start(&site_info_model.tree_view, false, false, 0);
@@ -42,6 +42,8 @@ impl SiteInfoPage {
     }
 
     pub fn update_models(&self) {
+        // TODO - need to fix this, row disappears when updated, but is there if resized
+        //self.site_info_model.update_model();
         self.lumber_type_model.update_model();
     }
 }

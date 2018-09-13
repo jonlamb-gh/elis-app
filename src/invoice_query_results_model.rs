@@ -1,8 +1,7 @@
 // TODO - make order info model capable of this, copy
 
-use elis::lumber::FobCostReader;
 use elis::steel_cent::formatting::us_style;
-use elis::Invoice;
+use elis::{Invoice, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
 
@@ -56,9 +55,12 @@ impl InvoiceQueryResultsModel {
         self.list_store.clear();
     }
 
-    pub fn update_model<T: FobCostReader>(&self, invoice: &Invoice, fob_reader: &T) {
+    pub fn update_model<T>(&self, invoice: &Invoice, db_provider: &T)
+    where
+        T: LumberFobCostProvider + SiteSalesTaxProvider,
+    {
         let order_info = invoice.order_info();
-        let summary = invoice.summary(fob_reader);
+        let summary = invoice.summary(db_provider);
 
         self.list_store.insert_with_values(
             None,
@@ -104,7 +106,7 @@ fn append_column(
     column.set_min_width(50);
     column.pack_start(&renderer, true);
     column.add_attribute(&renderer, "text", id);
-    column.set_clickable(false);
+    column.set_clickable(true);
     column.set_sort_column_id(id);
     tree_view.append_column(&column);
     v.push(column);

@@ -26,7 +26,7 @@ impl InvoiceSummaryModel {
         append_column("Total Pieces", &mut columns, &tree_view, None);
         append_column("Estimated Shipping", &mut columns, &tree_view, None);
         append_column("Sub Total", &mut columns, &tree_view, None);
-        append_column("Sales Tax 8.8%", &mut columns, &tree_view, None);
+        append_column("Sales Tax", &mut columns, &tree_view, None);
         append_column("Total Cost", &mut columns, &tree_view, None);
 
         tree_view.set_model(Some(&list_store));

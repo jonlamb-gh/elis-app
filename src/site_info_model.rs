@@ -1,16 +1,19 @@
-use elis::SiteInfo;
+use elis::Database;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct SiteInfoModel {
     pub tree_view: gtk::TreeView,
-    pub list_store: gtk::ListStore,
-    pub columns: Vec<gtk::TreeViewColumn>,
+    list_store: gtk::ListStore,
+    columns: Vec<gtk::TreeViewColumn>,
+    db: Rc<RefCell<Database>>,
 }
 
 impl SiteInfoModel {
-    pub fn new() -> Self {
+    pub fn new(db: Rc<RefCell<Database>>) -> Self {
         let tree_view = gtk::TreeView::new();
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
@@ -37,22 +40,30 @@ impl SiteInfoModel {
             tree_view,
             list_store,
             columns,
+            db,
         }
     }
 
-    pub fn update_model(&self, site_info: &SiteInfo) {
+    // TODO - move out of db closure
+    // TODO - need to fix this, row disappears when updated, but is there if resized
+    pub fn update_model(&self) {
         self.list_store.clear();
-        self.list_store.insert_with_values(
-            None,
-            &[0, 1, 2, 3, 4],
-            &[
-                &site_info.site_name(),
-                &site_info.address(),
-                &site_info.phone_number(),
-                &site_info.fax_number(),
-                &format!("{:.3} %", site_info.sales_tax()),
-            ],
-        );
+
+        self.db
+            .borrow()
+            .read(|db| {
+                self.list_store.insert_with_values(
+                    None,
+                    &[0, 1, 2, 3, 4],
+                    &[
+                        &db.site_info.site_name(),
+                        &db.site_info.address(),
+                        &db.site_info.phone_number(),
+                        &db.site_info.fax_number(),
+                        &format!("{:.3} %", db.site_info.sales_tax() * 100.0),
+                    ],
+                );
+            }).expect("Failed to read from database");
     }
 }
 

@@ -4,7 +4,7 @@ use gtk::{self, Widget};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use fob_reader::FobReader;
+use db_provider::DbProvider;
 use invoice_query_results_model::InvoiceQueryResultsModel;
 use notebook::NoteBook;
 
@@ -13,12 +13,12 @@ pub struct InvoiceSearchPage {
     vertical_layout: gtk::Box,
     pub page_index: u32,
     results_model: InvoiceQueryResultsModel,
-    fob_reader: FobReader,
+    db_provider: DbProvider,
 }
 
 impl InvoiceSearchPage {
     pub fn new(note: &mut NoteBook, db: Rc<RefCell<Database>>) -> Self {
-        let fob_reader = FobReader { db };
+        let db_provider = DbProvider { db };
         let results_model = InvoiceQueryResultsModel::new();
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
@@ -33,7 +33,7 @@ impl InvoiceSearchPage {
                 .expect("Virtical layout downcast failed"),
             page_index,
             results_model,
-            fob_reader,
+            db_provider,
         }
     }
 
@@ -44,7 +44,7 @@ impl InvoiceSearchPage {
         self.results_model.clear_model();
 
         for inv in invoices {
-            self.results_model.update_model(inv, &self.fob_reader);
+            self.results_model.update_model(inv, &self.db_provider);
         }
     }
 }

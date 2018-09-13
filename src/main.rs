@@ -13,8 +13,9 @@ use std::rc::Rc;
 
 #[macro_use]
 mod macros;
+mod customer_query_results_model;
 mod customer_search_page;
-mod fob_reader;
+mod db_provider;
 mod invoice_query_results_model;
 mod invoice_search_page;
 mod invoice_summary_model;
@@ -31,7 +32,7 @@ use customer_search_page::CustomerSearchPage;
 use elis::lumber::Lumber;
 use elis::steel_cent::currency::USD;
 use elis::steel_cent::Money;
-use elis::{database_from_path, Database, OrderNumber};
+use elis::{database_from_path, CustomerInfo, Database, OrderNumber, SiteInfo};
 use invoice_search_page::InvoiceSearchPage;
 use new_customer_page::NewCustomerPage;
 use new_invoice_page::NewInvoicePage;
@@ -54,7 +55,42 @@ pub fn build_ui(application: &gtk::Application) {
             db.lumber_types.insert(lt.type_name().to_string(), lt);
             let lt = Lumber::new("Red Pine".to_string(), Money::of_major_minor(USD, 1, 73));
             db.lumber_types.insert(lt.type_name().to_string(), lt);
+            let lt = Lumber::new("Pine".to_string(), Money::of_major_minor(USD, 1, 17));
+            db.lumber_types.insert(lt.type_name().to_string(), lt);
         }).expect("Failed to write to database");
+
+    // construct a sample site
+    db.borrow()
+        .write(|db| {
+            db.site_info = SiteInfo::new(
+                "WoodSpot".to_string(),
+                "PO Box 1234 Somewher, AB 92992".to_string(),
+                "345-290-2343".to_string(),
+                "".to_string(),
+                0.088,
+            );
+        }).expect("Failed to write to database");
+
+    // sample customers
+    db.borrow()
+        .write(|db| {
+            let customer = CustomerInfo::new(
+                "Jon".to_string(),
+                "123 Somewhere".to_string(),
+                "123-203-2343".to_string(),
+                String::new(),
+            );
+            db.customers.insert(customer.name().to_string(), customer);
+            let customer = CustomerInfo::new(
+                "Steve".to_string(),
+                "429 Somewhere".to_string(),
+                "123-203-2343".to_string(),
+                String::new(),
+            );
+            db.customers.insert(customer.name().to_string(), customer);
+        }).expect("Failed to write to database");
+
+    // save it
     db.borrow().save().expect("Failed to save database");
 
     let window = gtk::ApplicationWindow::new(application);
@@ -62,7 +98,7 @@ pub fn build_ui(application: &gtk::Application) {
     let new_invoice_page = NewInvoicePage::new(&mut note, db.clone());
     let invoice_search_page = InvoiceSearchPage::new(&mut note, db.clone());
     let _new_customer_page = NewCustomerPage::new(&mut note);
-    let _customer_search_page = CustomerSearchPage::new(&mut note);
+    let customer_search_page = CustomerSearchPage::new(&mut note, db.clone());
     let site_info_page = SiteInfoPage::new(&mut note, db.clone());
 
     // TODO - this should be provided by the db
@@ -116,13 +152,17 @@ pub fn build_ui(application: &gtk::Application) {
         clone!(db, invoice_search_page => move |_nb, _page, page_index| {
             println!("switch-page : page = {}", page_index);
 
+            // TODO - give page a db ref ?
             if page_index == invoice_search_page.page_index {
-                // TODO - give page a db ref
                 db.borrow().read(|db| {
                     invoice_search_page.set_results(db.invoices.values());
                 }).expect("Failed to read from database");
             } else if page_index == site_info_page.page_index {
                 site_info_page.update_models();
+            } else if page_index == customer_search_page.page_index {
+                db.borrow().read(|db| {
+                    customer_search_page.set_results(db.customers.values());
+                }).expect("Failed to read from database");
             }
         }),
     );

@@ -1,13 +1,15 @@
-use elis::lumber::{FobCostReader, Lumber};
+use elis::lumber::Lumber;
 use elis::steel_cent::{currency::USD, Money};
-use elis::{BillableItem, Database, Invoice, OrderNumber};
+use elis::{
+    BillableItem, Database, Invoice, LumberFobCostProvider, OrderNumber, SiteSalesTaxProvider,
+};
 use glib::object::Cast;
 use gtk::prelude::*;
 use gtk::{self, Widget};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use fob_reader::FobReader;
+use db_provider::DbProvider;
 use invoice_summary_model::InvoiceSummaryModel;
 use items_model::{ItemId, ItemsModel};
 use notebook::NoteBook;
@@ -27,12 +29,12 @@ pub struct NewInvoicePage {
     selected_item_id: Rc<Cell<Option<ItemId>>>,
     // TODO - make this better
     default_item_lumber_type: String,
-    fob_reader: FobReader,
+    db_provider: DbProvider,
 }
 
 impl NewInvoicePage {
     pub fn new(note: &mut NoteBook, db: Rc<RefCell<Database>>) -> Self {
-        let fob_reader = FobReader { db };
+        let db_provider = DbProvider { db };
         let order_info_model = OrderInfoModel::new();
         let items_model = ItemsModel::new();
         let summary_model = InvoiceSummaryModel::new();
@@ -46,7 +48,7 @@ impl NewInvoicePage {
         let invoice = Rc::new(RefCell::new(Invoice::new(1)));
 
         let mut first_lumber_data = Lumber::new(String::new(), Money::zero(USD));
-        fob_reader
+        db_provider
             .db
             .borrow()
             .read(|db| {
@@ -60,7 +62,7 @@ impl NewInvoicePage {
         let default_item_lumber_type = String::from(first_lumber_data.type_name());
 
         order_info_model.update_model(invoice.borrow().order_info());
-        summary_model.update_model(&invoice.borrow().summary(&fob_reader));
+        summary_model.update_model(&invoice.borrow().summary(&db_provider));
 
         new_item_button.set_sensitive(true);
         delete_item_button.set_sensitive(false);
@@ -69,21 +71,21 @@ impl NewInvoicePage {
 
         // TODO - refactor a global refresh routine
         new_item_button.connect_clicked(
-            clone!(fob_reader, invoice, items_model, summary_model, default_item_lumber_type, save_invoice_button => move |_| {
+            clone!(db_provider, invoice, items_model, summary_model, default_item_lumber_type, save_invoice_button => move |_| {
             let item = BillableItem::new(default_item_lumber_type.clone());
             invoice.borrow_mut().add_billable_item(item);
-            refresh_items_model(&invoice.borrow(), &items_model, &fob_reader);
-            summary_model.update_model(&invoice.borrow().summary(&fob_reader));
+            refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+            summary_model.update_model(&invoice.borrow().summary(&db_provider));
             save_invoice_button.set_sensitive(true);
         }),
         );
 
         delete_item_button.connect_clicked(
-            clone!(fob_reader, invoice, selected_item_id, items_model,summary_model, save_invoice_button => move |_| {
+            clone!(db_provider, invoice, selected_item_id, items_model,summary_model, save_invoice_button => move |_| {
             if let Some(item_id) = selected_item_id.get() {
                 invoice.borrow_mut().remove_billable_item(item_id);
-                refresh_items_model(&invoice.borrow(), &items_model, &fob_reader);
-                summary_model.update_model(&invoice.borrow().summary(&fob_reader));
+                refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                summary_model.update_model(&invoice.borrow().summary(&db_provider));
             }
 
             if invoice.borrow().billable_items().len() == 0 {
@@ -93,11 +95,11 @@ impl NewInvoicePage {
         );
 
         clear_invoice_button.connect_clicked(
-            clone!(fob_reader, invoice, items_model, summary_model, save_invoice_button => move |_| {
+            clone!(db_provider, invoice, items_model, summary_model, save_invoice_button => move |_| {
             save_invoice_button.set_sensitive(false);
             invoice.borrow_mut().clear_billable_items();
-            refresh_items_model(&invoice.borrow(), &items_model, &fob_reader);
-            summary_model.update_model(&invoice.borrow().summary(&fob_reader));
+            refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+            summary_model.update_model(&invoice.borrow().summary(&db_provider));
         }),
         );
 
@@ -147,7 +149,7 @@ impl NewInvoicePage {
             invoice,
             selected_item_id,
             default_item_lumber_type,
-            fob_reader,
+            db_provider,
         }
     }
 
@@ -157,16 +159,19 @@ impl NewInvoicePage {
         self.save_invoice_button.set_sensitive(false);
         self.order_info_model.update_model(new_invoice.order_info());
         self.summary_model
-            .update_model(&new_invoice.summary(&self.fob_reader));
+            .update_model(&new_invoice.summary(&self.db_provider));
         self.items_model.clear_model();
 
         self.invoice.replace(Invoice::new(new_order_number))
     }
 }
 
-fn refresh_items_model<T: FobCostReader>(invoice: &Invoice, model: &ItemsModel, fob_reader: &T) {
+fn refresh_items_model<T>(invoice: &Invoice, model: &ItemsModel, db_provider: &T)
+where
+    T: LumberFobCostProvider + SiteSalesTaxProvider,
+{
     model.clear_model();
     for (id, item) in invoice.billable_items().iter().enumerate() {
-        model.update_model(item, id as ItemId, fob_reader);
+        model.update_model(item, id as ItemId, db_provider);
     }
 }

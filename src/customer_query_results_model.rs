@@ -1,32 +1,32 @@
-use elis::steel_cent::formatting::us_style;
-use elis::Database;
+use elis::CustomerInfo;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct LumberTypeModel {
+pub struct CustomerQueryResultsModel {
     pub scrolled_win: gtk::ScrolledWindow,
     tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
-    db: Rc<RefCell<Database>>,
 }
 
-impl LumberTypeModel {
-    pub fn new(db: Rc<RefCell<Database>>) -> Self {
+impl CustomerQueryResultsModel {
+    pub fn new() -> Self {
         let scrolled_win = gtk::ScrolledWindow::new(None, None);
         let tree_view = gtk::TreeView::new();
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String, // type name
-            Type::String, // FOB price
+            Type::String, // name
+            Type::String, // address
+            Type::String, // phone number
+            Type::String, // notes
         ]);
 
-        append_column("Lumber Type", &mut columns, &tree_view, None);
-        append_column("FOB Price", &mut columns, &tree_view, None);
+        append_column("Name", &mut columns, &tree_view, None);
+        append_column("Address", &mut columns, &tree_view, None);
+        append_column("Phone Number", &mut columns, &tree_view, None);
+        append_column("Notes", &mut columns, &tree_view, None);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
@@ -34,32 +34,29 @@ impl LumberTypeModel {
         tree_view.get_selection().set_mode(SelectionMode::Single);
         scrolled_win.add(&tree_view);
 
-        LumberTypeModel {
+        CustomerQueryResultsModel {
             scrolled_win,
             tree_view,
             list_store,
             columns,
-            db,
         }
     }
 
-    pub fn update_model(&self) {
+    pub fn clear_model(&self) {
         self.list_store.clear();
+    }
 
-        self.db
-            .borrow()
-            .read(|db| {
-                for lt in db.lumber_types.values() {
-                    self.list_store.insert_with_values(
-                        None,
-                        &[0, 1],
-                        &[
-                            &lt.type_name(),
-                            &format!("{}", us_style().display_for(lt.fob_cost())),
-                        ],
-                    );
-                }
-            }).expect("Failed to read from database");
+    pub fn update_model(&self, customer_info: &CustomerInfo) {
+        self.list_store.insert_with_values(
+            None,
+            &[0, 1, 2, 3],
+            &[
+                &customer_info.name(),
+                &customer_info.address(),
+                &customer_info.phone_number(),
+                &customer_info.notes(),
+            ],
+        );
     }
 }
 

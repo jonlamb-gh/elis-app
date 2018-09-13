@@ -1,6 +1,5 @@
-use elis::lumber::FobCostReader;
 use elis::steel_cent::formatting::us_style;
-use elis::BillableItem;
+use elis::{BillableItem, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, Type};
 
@@ -45,7 +44,7 @@ impl ItemsModel {
         append_column("Dimensions (T x W x L)", &mut columns, &tree_view, None);
         append_column("Quantity", &mut columns, &tree_view, None);
         append_column("BF", &mut columns, &tree_view, None);
-        append_column("fob <LOCATION>", &mut columns, &tree_view, None);
+        append_column("FOB", &mut columns, &tree_view, None);
         append_column("Cost", &mut columns, &tree_view, None);
 
         tree_view.set_model(Some(&list_store));
@@ -64,13 +63,11 @@ impl ItemsModel {
         self.list_store.clear();
     }
 
-    pub fn update_model<T: FobCostReader>(
-        &self,
-        item: &BillableItem,
-        item_id: ItemId,
-        fob_reader: &T,
-    ) {
-        let fob_cost = fob_reader.fob_cost(&item.lumber_type());
+    pub fn update_model<T>(&self, item: &BillableItem, item_id: ItemId, db_provider: &T)
+    where
+        T: LumberFobCostProvider + SiteSalesTaxProvider,
+    {
+        let fob_cost = db_provider.fob_cost(&item.lumber_type());
         let lumber_props = item.lumber_props();
 
         self.list_store.insert_with_values(
@@ -87,7 +84,7 @@ impl ItemsModel {
                 // TODO - config
                 &format!("{:.3}", item.board_dimensions().board_feet()),
                 &format!("{}", us_style().display_for(&fob_cost)),
-                &format!("{}", us_style().display_for(&item.cost(fob_reader))),
+                &format!("{}", us_style().display_for(&item.cost(db_provider))),
                 &(item_id as u32),
             ],
         );
