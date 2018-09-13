@@ -104,8 +104,9 @@ impl NewInvoicePage {
         items_model.tree_view.connect_cursor_changed(
             clone!(delete_item_button, selected_item_id => move |tree_view| {
             let selection = tree_view.get_selection();
+            // TODO - hard-coded index 7, move into items_model.rs ?
             let (id, selected) = if let Some((model, iter)) = selection.get_selected() {
-                if let Some(x) = model.get_value(&iter, 7).get::<u32>().map(|x| x as ItemId) {
+                if let Some(x) = model.get_value(&iter, 10).get::<u32>().map(|x| x as ItemId) {
                     (Some(x), true)
                 } else {
                     (None, false)
