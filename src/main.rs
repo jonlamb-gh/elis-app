@@ -16,6 +16,7 @@ mod macros;
 mod customer_query_results_model;
 mod customer_search_page;
 mod db_provider;
+mod default_column;
 mod invoice_query_results_model;
 mod invoice_search_page;
 mod invoice_summary_model;

@@ -3,6 +3,8 @@ use elis::{BillableItem, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, Type};
 
+use default_column::default_column;
+
 pub type ItemId = usize;
 
 #[derive(Clone)]
@@ -36,16 +38,18 @@ impl ItemsModel {
             Type::U32, // item_id
         ]);
 
-        append_column("Lumber Type", &mut columns, &tree_view, None);
-        append_column("Drying Method", &mut columns, &tree_view, None);
-        append_column("Grade", &mut columns, &tree_view, None);
-        append_column("Spec", &mut columns, &tree_view, None);
-        append_column("Description", &mut columns, &tree_view, None);
-        append_column("Dimensions (T x W x L)", &mut columns, &tree_view, None);
-        append_column("Quantity", &mut columns, &tree_view, None);
-        append_column("BF", &mut columns, &tree_view, None);
-        append_column("FOB", &mut columns, &tree_view, None);
-        append_column("Cost", &mut columns, &tree_view, None);
+        let renderer = default_column("Lumber Type", &tree_view, &mut columns);
+        //renderer.set_property_editable(true);
+
+        default_column("Drying Method", &tree_view, &mut columns);
+        default_column("Grade", &tree_view, &mut columns);
+        default_column("Spec", &tree_view, &mut columns);
+        default_column("Description", &tree_view, &mut columns);
+        default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
+        default_column("Quantity", &tree_view, &mut columns);
+        default_column("BF", &tree_view, &mut columns);
+        default_column("FOB", &tree_view, &mut columns);
+        default_column("Cost", &tree_view, &mut columns);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
@@ -89,32 +93,4 @@ impl ItemsModel {
             ],
         );
     }
-}
-
-// TODO - min/max width pattern
-fn append_column(
-    title: &str,
-    v: &mut Vec<gtk::TreeViewColumn>,
-    tree_view: &gtk::TreeView,
-    max_width: Option<i32>,
-) {
-    let id = v.len() as i32;
-
-    let renderer = gtk::CellRendererText::new();
-    //renderer.set_property_editable(true);
-
-    let column = gtk::TreeViewColumn::new();
-    column.set_title(title);
-    column.set_resizable(true);
-    if let Some(max_width) = max_width {
-        column.set_max_width(max_width);
-        column.set_expand(true);
-    }
-    column.set_min_width(25);
-    column.pack_start(&renderer, true);
-    column.add_attribute(&renderer, "text", id);
-    column.set_clickable(true);
-    column.set_sort_column_id(id);
-    tree_view.append_column(&column);
-    v.push(column);
 }
