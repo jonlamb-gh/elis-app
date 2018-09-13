@@ -23,6 +23,9 @@ impl ItemsModel {
         let list_store = gtk::ListStore::new(&[
             // these are the visible columns
             Type::String, // lumber type
+            Type::String, // drying method
+            Type::String, // grade
+            Type::String, // spec
             Type::String, // description
             Type::String, // dimensions
             Type::U32,    // quantity
@@ -35,6 +38,9 @@ impl ItemsModel {
         ]);
 
         append_column("Lumber Type", &mut columns, &tree_view, None);
+        append_column("Drying Method", &mut columns, &tree_view, None);
+        append_column("Grade", &mut columns, &tree_view, None);
+        append_column("Spec", &mut columns, &tree_view, None);
         append_column("Description", &mut columns, &tree_view, None);
         append_column("Dimensions (T x W x L)", &mut columns, &tree_view, None);
         append_column("Quantity", &mut columns, &tree_view, None);
@@ -65,12 +71,16 @@ impl ItemsModel {
         fob_reader: &T,
     ) {
         let fob_cost = fob_reader.fob_cost(&item.lumber_type());
+        let lumber_props = item.lumber_props();
 
         self.list_store.insert_with_values(
             None,
-            &[0, 1, 2, 3, 4, 5, 6, 7],
+            &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             &[
                 &item.lumber_type(),
+                &lumber_props.drying_method.to_str(),
+                &lumber_props.grade.to_str(),
+                &lumber_props.spec.to_str(),
                 &item.description(),
                 &format!("{}", item.board_dimensions()),
                 &(item.quantity() as u32),
