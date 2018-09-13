@@ -23,28 +23,35 @@ impl ItemsModel {
 
         let list_store = gtk::ListStore::new(&[
             // these are the visible columns
-            Type::String, // lumber type
-            Type::String, // drying method
-            Type::String, // grade
-            Type::String, // spec
-            Type::String, // description
-            Type::String, // dimensions
-            Type::U32,    // quantity
-            Type::String, // board feet
-            Type::String, // fob <location>
-            Type::String, // cost
+            Type::String, // [0] lumber type
+            Type::String, // [1] drying method
+            Type::String, // [2] grade
+            Type::String, // [3] spec
+            Type::String, // [4] description
+            Type::String, // [5] dimensions
+            Type::U32,    // [6] quantity
+            Type::String, // [7] board feet
+            Type::String, // [8] fob <location>
+            Type::String, // [9] cost
             // last column is hidden
             // it contains the item ID (usually vector index)
             Type::U32, // item_id
         ]);
 
-        let renderer = default_column("Lumber Type", &tree_view, &mut columns);
-        //renderer.set_property_editable(true);
-
+        default_column("Lumber Type", &tree_view, &mut columns);
         default_column("Drying Method", &tree_view, &mut columns);
         default_column("Grade", &tree_view, &mut columns);
         default_column("Spec", &tree_view, &mut columns);
-        default_column("Description", &tree_view, &mut columns);
+
+        let renderer = default_column("Description", &tree_view, &mut columns);
+        renderer.set_property_editable(true);
+
+        renderer.connect_edited(clone!(list_store => move |_r, tree_path, value| {
+            // TODO - input validator, update item, get item value as result
+            let iter = list_store.get_iter(&tree_path).unwrap();
+            list_store.set_value(&iter, 4, &value.to_value());
+        }));
+
         default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
         default_column("Quantity", &tree_view, &mut columns);
         default_column("BF", &tree_view, &mut columns);
