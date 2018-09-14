@@ -2,10 +2,39 @@ use elis::steel_cent::formatting::us_style;
 use elis::{BillableItem, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, Type};
+use std::ops;
 
 use default_column::default_column;
 
 pub type ItemId = usize;
+
+// only provides the editable columns?
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemColumn {
+    LumberType,
+    Description,
+    Quantity,
+    HiddenItemId,
+}
+
+impl ItemColumn {
+    pub fn column_index(&self) -> u32 {
+        match *self {
+            ItemColumn::LumberType => 0,
+            ItemColumn::Description => 4,
+            ItemColumn::Quantity => 6,
+            ItemColumn::HiddenItemId => 10,
+        }
+    }
+}
+
+impl ops::Index<ItemColumn> for [gtk::CellRendererText] {
+    type Output = gtk::CellRendererText;
+
+    fn index(&self, i: ItemColumn) -> &gtk::CellRendererText {
+        &(self[i as usize])
+    }
+}
 
 #[derive(Clone)]
 pub struct ItemsModel {
@@ -13,6 +42,7 @@ pub struct ItemsModel {
     pub tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
+    pub editable_renderers: [gtk::CellRendererText; 3],
 }
 
 impl ItemsModel {
@@ -35,25 +65,16 @@ impl ItemsModel {
             Type::String, // [9] cost
             // last column is hidden
             // it contains the item ID (usually vector index)
-            Type::U32, // item_id
+            Type::U32, // [10] item_id
         ]);
 
-        default_column("Lumber Type", &tree_view, &mut columns);
+        let renderer_lum_type = default_column("Lumber Type", &tree_view, &mut columns);
         default_column("Drying Method", &tree_view, &mut columns);
         default_column("Grade", &tree_view, &mut columns);
         default_column("Spec", &tree_view, &mut columns);
-
-        let renderer = default_column("Description", &tree_view, &mut columns);
-        renderer.set_property_editable(true);
-
-        renderer.connect_edited(clone!(list_store => move |_r, tree_path, value| {
-            // TODO - input validator, update item, get item value as result
-            let iter = list_store.get_iter(&tree_path).unwrap();
-            list_store.set_value(&iter, 4, &value.to_value());
-        }));
-
+        let renderer_desc = default_column("Description", &tree_view, &mut columns);
         default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
-        default_column("Quantity", &tree_view, &mut columns);
+        let renderer_quant = default_column("Quantity", &tree_view, &mut columns);
         default_column("BF", &tree_view, &mut columns);
         default_column("FOB", &tree_view, &mut columns);
         default_column("Cost", &tree_view, &mut columns);
@@ -67,6 +88,7 @@ impl ItemsModel {
             tree_view,
             list_store,
             columns,
+            editable_renderers: [renderer_lum_type, renderer_desc, renderer_quant],
         }
     }
 
@@ -99,5 +121,27 @@ impl ItemsModel {
                 &(item_id as u32),
             ],
         );
+    }
+
+    pub fn get_selected(&self) -> (Option<ItemId>, bool) {
+        let selection = self.tree_view.get_selection();
+        let item_id_column = ItemColumn::HiddenItemId.column_index() as i32;
+
+        let (id, selected) = if let Some((model, iter)) = selection.get_selected() {
+            let value = model
+                .get_value(&iter, item_id_column)
+                .get::<u32>()
+                .map(|x| x as ItemId);
+
+            if let Some(x) = value {
+                (Some(x), true)
+            } else {
+                (None, false)
+            }
+        } else {
+            (None, false)
+        };
+
+        (id, selected)
     }
 }

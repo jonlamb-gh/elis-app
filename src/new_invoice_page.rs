@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use db_provider::DbProvider;
 use invoice_summary_model::InvoiceSummaryModel;
-use items_model::{ItemId, ItemsModel};
+use items_model::{ItemColumn, ItemId, ItemsModel};
 use notebook::NoteBook;
 use order_info_model::OrderInfoModel;
 
@@ -104,21 +104,24 @@ impl NewInvoicePage {
         );
 
         items_model.tree_view.connect_cursor_changed(
-            clone!(delete_item_button, selected_item_id => move |tree_view| {
-            let selection = tree_view.get_selection();
-            // TODO - hard-coded index 7, move into items_model.rs ?
-            let (id, selected) = if let Some((model, iter)) = selection.get_selected() {
-                if let Some(x) = model.get_value(&iter, 10).get::<u32>().map(|x| x as ItemId) {
-                    (Some(x), true)
-                } else {
-                    (None, false)
-                }
-            } else {
-                (None, false)
-            };
+            clone!(items_model, delete_item_button, selected_item_id => move |_| {
+                let (id, selected) = items_model.get_selected();
+                selected_item_id.set(id);
+                delete_item_button.set_sensitive(selected);
+            }),
+        );
 
-            selected_item_id.set(id);
-            delete_item_button.set_sensitive(selected);
+        // TODO - input validator
+        items_model.editable_renderers[ItemColumn::Description].set_property_editable(true);
+        items_model.editable_renderers[ItemColumn::Description].connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    invoice.borrow_mut().get_billable_item_mut(item_id).set_description(value);
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
         }),
         );
 
