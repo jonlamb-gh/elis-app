@@ -125,6 +125,24 @@ impl NewInvoicePage {
         }),
         );
 
+        // TODO - input validator
+        items_model.editable_renderers[ItemColumn::Quantity].set_property_editable(true);
+        items_model.editable_renderers[ItemColumn::Quantity].connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    if let Ok(usize_value) = value.parse::<usize>() {
+                        if usize_value > 0 {
+                            invoice.borrow_mut().get_billable_item_mut(item_id).set_quantity(usize_value);
+                        }
+                    }
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
+        }),
+        );
+
         vertical_layout.pack_start(&order_info_model.tree_view, false, false, 0);
         vertical_layout.pack_start(&items_model.scrolled_win, true, true, 0);
         horizontal_layout.attach(&new_item_button, 0, 0, 1, 1);
