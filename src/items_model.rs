@@ -16,6 +16,7 @@ pub struct CellRenderers {
     pub grade: gtk::CellRendererCombo,
     pub spec: gtk::CellRendererCombo,
     pub description: gtk::CellRendererText,
+    pub board_dimensions: gtk::CellRendererText,
     pub quantity: gtk::CellRendererText,
 }
 
@@ -73,10 +74,14 @@ impl ItemsModel {
         let rend_spec = default_combo_column("Spec", &combo_model, &tree_view, &mut columns);
 
         let rend_description = default_column("Description", &tree_view, &mut columns);
+        rend_description.set_property_editable(true);
 
-        default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
+        let rend_board_dimensions =
+            default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
+        rend_board_dimensions.set_property_editable(true);
 
         let rend_quantity = default_column("Quantity", &tree_view, &mut columns);
+        rend_quantity.set_property_editable(true);
 
         default_column("BF", &tree_view, &mut columns);
         default_column("FOB", &tree_view, &mut columns);
@@ -94,10 +99,11 @@ impl ItemsModel {
             cell_renderers: CellRenderers {
                 lumber_type: rend_lumber_type,
                 drying_method: rend_drying_method,
-                description: rend_description,
-                quantity: rend_quantity,
                 grade: rend_grade,
                 spec: rend_spec,
+                description: rend_description,
+                board_dimensions: rend_board_dimensions,
+                quantity: rend_quantity,
             },
         }
     }

@@ -1,7 +1,8 @@
 use elis::lumber::{DryingMethod, Grade, Lumber, Specification};
 use elis::steel_cent::{currency::USD, Money};
 use elis::{
-    BillableItem, Database, Invoice, LumberFobCostProvider, OrderNumber, SiteSalesTaxProvider,
+    BillableItem, BoardDimensions, Database, Invoice, LumberFobCostProvider, OrderNumber,
+    SiteSalesTaxProvider,
 };
 use glib::object::Cast;
 use gtk::prelude::*;
@@ -111,11 +112,6 @@ impl NewInvoicePage {
             }),
         );
 
-        // TODO - input validator
-        items_model
-            .cell_renderers
-            .description
-            .set_property_editable(true);
         items_model.cell_renderers.description.connect_edited(
             clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
                 let (id, _selected) = items_model.get_selected();
@@ -128,11 +124,6 @@ impl NewInvoicePage {
         }),
         );
 
-        // TODO - input validator
-        items_model
-            .cell_renderers
-            .quantity
-            .set_property_editable(true);
         items_model.cell_renderers.quantity.connect_edited(
             clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
                 let (id, _selected) = items_model.get_selected();
@@ -140,7 +131,9 @@ impl NewInvoicePage {
                 if let Some(item_id) = id {
                     if let Ok(usize_value) = value.parse::<usize>() {
                         if usize_value > 0 {
-                            invoice.borrow_mut().get_billable_item_mut(item_id).set_quantity(usize_value);
+                            invoice.borrow_mut()
+                                .get_billable_item_mut(item_id)
+                                .set_quantity(usize_value);
                         }
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
@@ -205,6 +198,22 @@ impl NewInvoicePage {
                         invoice.borrow_mut()
                             .get_billable_item_mut(item_id)
                             .set_lumber_props(props);
+                    }
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
+        }),
+        );
+
+        items_model.cell_renderers.board_dimensions.connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    if let Ok(board_dims) = value.parse::<BoardDimensions>() {
+                        invoice.borrow_mut()
+                            .get_billable_item_mut(item_id)
+                            .set_board_dimensions(board_dims);
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
                     summary_model.update_model(&invoice.borrow().summary(&db_provider));
