@@ -1,10 +1,11 @@
 use elis::steel_cent::formatting::us_style;
 use elis::{BillableItem, LumberFobCostProvider, SiteSalesTaxProvider};
+use elis::lumber::{Grade, DryingMethod, Specification};
 use gtk::prelude::*;
 use gtk::{self, Type};
 use std::ops;
 
-use default_column::default_column;
+use default_column::{default_column, default_combo_column};
 
 pub type ItemId = usize;
 
@@ -69,10 +70,27 @@ impl ItemsModel {
         ]);
 
         let renderer_lum_type = default_column("Lumber Type", &tree_view, &mut columns);
-        default_column("Drying Method", &tree_view, &mut columns);
-        default_column("Grade", &tree_view, &mut columns);
-        default_column("Spec", &tree_view, &mut columns);
+
+        let combo_model = gtk::ListStore::new(&[Type::String]);
+        for dm in DryingMethod::enumerate() {
+            combo_model.insert_with_values(None, &[0], &[&dm.to_str()]);
+        }
+        default_combo_column("Drying Method", &combo_model, &tree_view, &mut columns);
+
+        let combo_model = gtk::ListStore::new(&[Type::String]);
+        for g in Grade::enumerate() {
+            combo_model.insert_with_values(None, &[0], &[&g.to_str()]);
+        }
+        default_combo_column("Grade", &combo_model, &tree_view, &mut columns);
+
+        let combo_model = gtk::ListStore::new(&[Type::String]);
+        for s in Specification::enumerate() {
+            combo_model.insert_with_values(None, &[0], &[&s.to_str()]);
+        }
+        default_combo_column("Spec", &combo_model, &tree_view, &mut columns);
+
         let renderer_desc = default_column("Description", &tree_view, &mut columns);
+
         default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
         let renderer_quant = default_column("Quantity", &tree_view, &mut columns);
         default_column("BF", &tree_view, &mut columns);
