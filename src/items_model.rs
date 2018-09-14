@@ -1,40 +1,22 @@
+use elis::lumber::{DryingMethod, Grade, Specification};
 use elis::steel_cent::formatting::us_style;
 use elis::{BillableItem, LumberFobCostProvider, SiteSalesTaxProvider};
-use elis::lumber::{Grade, DryingMethod, Specification};
 use gtk::prelude::*;
 use gtk::{self, Type};
-use std::ops;
 
 use default_column::{default_column, default_combo_column};
 
 pub type ItemId = usize;
 
-// only provides the editable columns?
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ItemColumn {
-    LumberType,
-    Description,
-    Quantity,
-    HiddenItemId,
-}
-
-impl ItemColumn {
-    pub fn column_index(&self) -> u32 {
-        match *self {
-            ItemColumn::LumberType => 0,
-            ItemColumn::Description => 4,
-            ItemColumn::Quantity => 6,
-            ItemColumn::HiddenItemId => 10,
-        }
-    }
-}
-
-impl ops::Index<ItemColumn> for [gtk::CellRendererText] {
-    type Output = gtk::CellRendererText;
-
-    fn index(&self, i: ItemColumn) -> &gtk::CellRendererText {
-        &(self[i as usize])
-    }
+// TODO - only providing editables?
+#[derive(Clone)]
+pub struct CellRenderers {
+    pub lumber_type: gtk::CellRendererText,
+    pub drying_method: gtk::CellRendererCombo,
+    pub grade: gtk::CellRendererCombo,
+    pub spec: gtk::CellRendererCombo,
+    pub description: gtk::CellRendererText,
+    pub quantity: gtk::CellRendererText,
 }
 
 #[derive(Clone)]
@@ -43,7 +25,7 @@ pub struct ItemsModel {
     pub tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
-    pub editable_renderers: [gtk::CellRendererText; 3],
+    pub cell_renderers: CellRenderers,
 }
 
 impl ItemsModel {
@@ -69,30 +51,33 @@ impl ItemsModel {
             Type::U32, // [10] item_id
         ]);
 
-        let renderer_lum_type = default_column("Lumber Type", &tree_view, &mut columns);
+        let rend_lumber_type = default_column("Lumber Type", &tree_view, &mut columns);
 
         let combo_model = gtk::ListStore::new(&[Type::String]);
         for dm in DryingMethod::enumerate() {
             combo_model.insert_with_values(None, &[0], &[&dm.to_str()]);
         }
-        default_combo_column("Drying Method", &combo_model, &tree_view, &mut columns);
+        let rend_drying_method =
+            default_combo_column("Drying Method", &combo_model, &tree_view, &mut columns);
 
         let combo_model = gtk::ListStore::new(&[Type::String]);
         for g in Grade::enumerate() {
             combo_model.insert_with_values(None, &[0], &[&g.to_str()]);
         }
-        default_combo_column("Grade", &combo_model, &tree_view, &mut columns);
+        let rend_grade = default_combo_column("Grade", &combo_model, &tree_view, &mut columns);
 
         let combo_model = gtk::ListStore::new(&[Type::String]);
         for s in Specification::enumerate() {
             combo_model.insert_with_values(None, &[0], &[&s.to_str()]);
         }
-        default_combo_column("Spec", &combo_model, &tree_view, &mut columns);
+        let rend_spec = default_combo_column("Spec", &combo_model, &tree_view, &mut columns);
 
-        let renderer_desc = default_column("Description", &tree_view, &mut columns);
+        let rend_description = default_column("Description", &tree_view, &mut columns);
 
         default_column("Dimensions (T x W x L)", &tree_view, &mut columns);
-        let renderer_quant = default_column("Quantity", &tree_view, &mut columns);
+
+        let rend_quantity = default_column("Quantity", &tree_view, &mut columns);
+
         default_column("BF", &tree_view, &mut columns);
         default_column("FOB", &tree_view, &mut columns);
         default_column("Cost", &tree_view, &mut columns);
@@ -106,7 +91,14 @@ impl ItemsModel {
             tree_view,
             list_store,
             columns,
-            editable_renderers: [renderer_lum_type, renderer_desc, renderer_quant],
+            cell_renderers: CellRenderers {
+                lumber_type: rend_lumber_type,
+                drying_method: rend_drying_method,
+                description: rend_description,
+                quantity: rend_quantity,
+                grade: rend_grade,
+                spec: rend_spec,
+            },
         }
     }
 
@@ -143,7 +135,7 @@ impl ItemsModel {
 
     pub fn get_selected(&self) -> (Option<ItemId>, bool) {
         let selection = self.tree_view.get_selection();
-        let item_id_column = ItemColumn::HiddenItemId.column_index() as i32;
+        let item_id_column: i32 = 10;
 
         let (id, selected) = if let Some((model, iter)) = selection.get_selected() {
             let value = model

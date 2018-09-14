@@ -1,5 +1,5 @@
-use gtk::prelude::*;
 use gtk;
+use gtk::prelude::*;
 
 pub fn default_column(
     title: &str,

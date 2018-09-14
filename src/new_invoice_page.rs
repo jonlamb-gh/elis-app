@@ -1,4 +1,4 @@
-use elis::lumber::Lumber;
+use elis::lumber::{DryingMethod, Grade, Lumber, Specification};
 use elis::steel_cent::{currency::USD, Money};
 use elis::{
     BillableItem, Database, Invoice, LumberFobCostProvider, OrderNumber, SiteSalesTaxProvider,
@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use db_provider::DbProvider;
 use invoice_summary_model::InvoiceSummaryModel;
-use items_model::{ItemColumn, ItemId, ItemsModel};
+use items_model::{ItemId, ItemsModel};
 use notebook::NoteBook;
 use order_info_model::OrderInfoModel;
 
@@ -112,8 +112,11 @@ impl NewInvoicePage {
         );
 
         // TODO - input validator
-        items_model.editable_renderers[ItemColumn::Description].set_property_editable(true);
-        items_model.editable_renderers[ItemColumn::Description].connect_edited(
+        items_model
+            .cell_renderers
+            .description
+            .set_property_editable(true);
+        items_model.cell_renderers.description.connect_edited(
             clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
                 let (id, _selected) = items_model.get_selected();
 
@@ -126,8 +129,11 @@ impl NewInvoicePage {
         );
 
         // TODO - input validator
-        items_model.editable_renderers[ItemColumn::Quantity].set_property_editable(true);
-        items_model.editable_renderers[ItemColumn::Quantity].connect_edited(
+        items_model
+            .cell_renderers
+            .quantity
+            .set_property_editable(true);
+        items_model.cell_renderers.quantity.connect_edited(
             clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
                 let (id, _selected) = items_model.get_selected();
 
@@ -136,6 +142,69 @@ impl NewInvoicePage {
                         if usize_value > 0 {
                             invoice.borrow_mut().get_billable_item_mut(item_id).set_quantity(usize_value);
                         }
+                    }
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
+        }),
+        );
+
+        items_model.cell_renderers.drying_method.connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    if let Ok(enum_value) = value.parse::<DryingMethod>() {
+                        let mut props = invoice.borrow()
+                            .billable_items()[item_id]
+                            .lumber_props()
+                            .clone();
+                        props.drying_method = enum_value;
+                        invoice.borrow_mut()
+                            .get_billable_item_mut(item_id)
+                            .set_lumber_props(props);
+                    }
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
+        }),
+        );
+
+        items_model.cell_renderers.grade.connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    if let Ok(enum_value) = value.parse::<Grade>() {
+                        let mut props = invoice.borrow()
+                            .billable_items()[item_id]
+                            .lumber_props()
+                            .clone();
+                        props.grade = enum_value;
+                        invoice.borrow_mut()
+                            .get_billable_item_mut(item_id)
+                            .set_lumber_props(props);
+                    }
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
+        }),
+        );
+
+        items_model.cell_renderers.spec.connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    if let Ok(enum_value) = value.parse::<Specification>() {
+                        let mut props = invoice.borrow()
+                            .billable_items()[item_id]
+                            .lumber_props()
+                            .clone();
+                        props.spec = enum_value;
+                        invoice.borrow_mut()
+                            .get_billable_item_mut(item_id)
+                            .set_lumber_props(props);
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
                     summary_model.update_model(&invoice.borrow().summary(&db_provider));
