@@ -8,11 +8,12 @@ pub fn default_column(
 ) -> gtk::CellRendererText {
     let id = columns.len() as i32;
     let renderer = gtk::CellRendererText::new();
-    let column = gtk::TreeViewColumn::new();
+    renderer.set_property_xalign(0.0);
 
+    let column = gtk::TreeViewColumn::new();
     column.set_title(title);
     column.set_resizable(true);
-    column.set_min_width(25);
+    column.set_min_width(50);
     column.pack_start(&renderer, true);
     column.add_attribute(&renderer, "text", id);
     column.set_clickable(true);
@@ -43,7 +44,7 @@ pub fn default_combo_column(
     column.set_title(title);
     column.set_resizable(true);
     column.set_expand(false);
-    column.set_min_width(25);
+    column.set_min_width(50);
     column.pack_start(&renderer, true);
     column.add_attribute(&renderer, "text", id);
     column.set_clickable(true);

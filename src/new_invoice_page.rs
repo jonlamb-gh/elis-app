@@ -1,3 +1,5 @@
+// TODO - this is getter very ugly
+
 use elis::lumber::{DryingMethod, Grade, Lumber, Specification};
 use elis::steel_cent::{currency::USD, Money};
 use elis::{
@@ -36,7 +38,7 @@ pub struct NewInvoicePage {
 impl NewInvoicePage {
     pub fn new(note: &mut NoteBook, db: Rc<RefCell<Database>>) -> Self {
         let db_provider = DbProvider { db: db.clone() };
-        let order_info_model = OrderInfoModel::new();
+        let order_info_model = OrderInfoModel::new(db.clone());
         let items_model = ItemsModel::new(db.clone());
         let summary_model = InvoiceSummaryModel::new();
         let new_item_button = gtk::Button::new_with_label("Add");
@@ -245,7 +247,32 @@ impl NewInvoicePage {
         }),
         );
 
-        vertical_layout.pack_start(&order_info_model.tree_view, false, false, 0);
+        order_info_model.cell_renderers.customer.connect_edited(
+            clone!(invoice, order_info_model, summary_model, items_model, db_provider => move |_, _, value| {
+                println!("customer '{}'", value);
+
+                let mut is_valid: bool = false;
+
+                db_provider.db.borrow().read(|db| {
+                    if db.customers.contains_key(value) {
+                        is_valid = true;
+                    }
+                }).expect("Failed to read from database");
+
+                if is_valid {
+                    let mut new_order_info = invoice.borrow().order_info().clone();
+                    new_order_info.set_customer_name(value.to_string());
+                    invoice.borrow_mut().set_order_info(new_order_info);
+
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    order_info_model.update_model(invoice.borrow().order_info());
+                }
+        }),
+        );
+
+        //vertical_layout.set_spacing(50);
+        vertical_layout.pack_start(&order_info_model.tree_view, false, true, 0);
         vertical_layout.pack_start(&items_model.scrolled_win, true, true, 0);
         horizontal_layout.attach(&new_item_button, 0, 0, 1, 1);
         horizontal_layout.attach(&delete_item_button, 1, 0, 1, 1);

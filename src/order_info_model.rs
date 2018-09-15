@@ -1,16 +1,26 @@
-use elis::*;
+use elis::{Database, OrderInfo};
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use default_column::{default_column, default_combo_column};
+#[derive(Clone)]
+pub struct CellRenderers {
+    pub customer: gtk::CellRendererCombo,
+}
 
 #[derive(Clone)]
 pub struct OrderInfoModel {
     pub tree_view: gtk::TreeView,
-    pub list_store: gtk::ListStore,
-    pub columns: Vec<gtk::TreeViewColumn>,
+    list_store: gtk::ListStore,
+    columns: Vec<gtk::TreeViewColumn>,
+    pub cell_renderers: CellRenderers,
+    db: Rc<RefCell<Database>>,
 }
 
 impl OrderInfoModel {
-    pub fn new() -> Self {
+    pub fn new(db: Rc<RefCell<Database>>) -> Self {
         let tree_view = gtk::TreeView::new();
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
@@ -25,24 +35,50 @@ impl OrderInfoModel {
             Type::Bool,   // will call
         ]);
 
-        append_column("Customer", &mut columns, &tree_view, None);
-        append_column("Confirms with", &mut columns, &tree_view, None);
-        append_column("Order Number", &mut columns, &tree_view, None);
-        append_column("Est Weight", &mut columns, &tree_view, None);
-        append_column("Order Date", &mut columns, &tree_view, None);
-        append_column("Shipment Date", &mut columns, &tree_view, None);
-        append_column("Site", &mut columns, &tree_view, None);
-        append_column("Will Call", &mut columns, &tree_view, None);
+        let combo_model = gtk::ListStore::new(&[Type::String]);
+        db.borrow()
+            .read(|db| {
+                for name in db.customers.keys() {
+                    combo_model.insert_with_values(None, &[0], &[name]);
+                }
+            }).expect("Failed to read from database");
+
+        let rend_customer =
+            default_combo_column("Customer", &combo_model, &tree_view, &mut columns);
+
+        let renderer = default_column("Confirms with", &tree_view, &mut columns);
+        renderer.set_property_xalign(0.5);
+
+        let renderer = default_column("Order Number", &tree_view, &mut columns);
+        renderer.set_property_xalign(0.5);
+
+        let renderer = default_column("Est Weight", &tree_view, &mut columns);
+        renderer.set_property_xalign(0.5);
+
+        let renderer = default_column("Order Date", &tree_view, &mut columns);
+        renderer.set_property_xalign(0.5);
+
+        let renderer = default_column("Shipment Date", &tree_view, &mut columns);
+        renderer.set_property_xalign(0.5);
+
+        let renderer = default_column("Site", &tree_view, &mut columns);
+        renderer.set_property_xalign(0.5);
+
+        default_column("Will Call", &tree_view, &mut columns);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
         tree_view.set_headers_clickable(false);
-        tree_view.get_selection().set_mode(SelectionMode::None);
+        tree_view.get_selection().set_mode(SelectionMode::Single);
 
         OrderInfoModel {
             tree_view,
             list_store,
             columns,
+            cell_renderers: CellRenderers {
+                customer: rend_customer,
+            },
+            db,
         }
     }
 
@@ -63,36 +99,4 @@ impl OrderInfoModel {
             ],
         );
     }
-}
-
-// TODO - min/max width pattern
-fn append_column(
-    title: &str,
-    v: &mut Vec<gtk::TreeViewColumn>,
-    tree_view: &gtk::TreeView,
-    max_width: Option<i32>,
-) {
-    let id = v.len() as i32;
-    let renderer = gtk::CellRendererText::new();
-
-    if title == "Will Call" {
-        renderer.set_property_xalign(0.0);
-    } else {
-        renderer.set_property_xalign(0.5);
-    }
-
-    let column = gtk::TreeViewColumn::new();
-    column.set_title(title);
-    column.set_resizable(true);
-    if let Some(max_width) = max_width {
-        column.set_max_width(max_width);
-        column.set_expand(true);
-    }
-    column.set_min_width(50);
-    column.pack_start(&renderer, true);
-    column.add_attribute(&renderer, "text", id);
-    column.set_clickable(false);
-    column.set_sort_column_id(id);
-    tree_view.append_column(&column);
-    v.push(column);
 }
