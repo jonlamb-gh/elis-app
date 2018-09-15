@@ -76,7 +76,7 @@ impl NewInvoicePage {
         let default_item_lumber_type = String::from(first_lumber_data.type_name());
 
         order_info_model.update_model(invoice.borrow().order_info());
-        summary_model.update_model(&invoice.borrow().summary(&db_provider));
+        summary_model.update_values(&invoice.borrow().summary(&db_provider));
 
         new_item_button.set_sensitive(true);
         delete_item_button.set_sensitive(false);
@@ -89,7 +89,7 @@ impl NewInvoicePage {
             let item = BillableItem::new(default_item_lumber_type.clone());
             invoice.borrow_mut().add_billable_item(item);
             refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-            summary_model.update_model(&invoice.borrow().summary(&db_provider));
+            summary_model.update_values(&invoice.borrow().summary(&db_provider));
             save_invoice_button.set_sensitive(true);
         }),
         );
@@ -99,7 +99,7 @@ impl NewInvoicePage {
             if let Some(item_id) = selected_item_id.get() {
                 invoice.borrow_mut().remove_billable_item(item_id);
                 refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                summary_model.update_values(&invoice.borrow().summary(&db_provider));
             }
 
             if invoice.borrow().billable_items().len() == 0 {
@@ -113,7 +113,7 @@ impl NewInvoicePage {
             save_invoice_button.set_sensitive(false);
             invoice.borrow_mut().clear_billable_items();
             refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-            summary_model.update_model(&invoice.borrow().summary(&db_provider));
+            summary_model.update_values(&invoice.borrow().summary(&db_provider));
         }),
         );
 
@@ -132,7 +132,7 @@ impl NewInvoicePage {
                 if let Some(item_id) = id {
                     invoice.borrow_mut().get_billable_item_mut(item_id).set_description(value);
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
         }),
         );
@@ -150,7 +150,7 @@ impl NewInvoicePage {
                         }
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
         }),
         );
@@ -174,7 +174,7 @@ impl NewInvoicePage {
                     }
 
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
             }),
         );
@@ -195,7 +195,7 @@ impl NewInvoicePage {
                             .set_lumber_props(props);
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
         }),
         );
@@ -216,7 +216,7 @@ impl NewInvoicePage {
                             .set_lumber_props(props);
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
         }),
         );
@@ -237,7 +237,7 @@ impl NewInvoicePage {
                             .set_lumber_props(props);
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
         }),
         );
@@ -253,7 +253,7 @@ impl NewInvoicePage {
                             .set_board_dimensions(board_dims);
                     }
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 }
         }),
         );
@@ -276,7 +276,7 @@ impl NewInvoicePage {
                     invoice.borrow_mut().set_order_info(new_order_info);
 
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
-                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                    summary_model.update_values(&invoice.borrow().summary(&db_provider));
                     order_info_model.update_model(invoice.borrow().order_info());
                 }
         }),
@@ -323,7 +323,7 @@ impl NewInvoicePage {
         self.save_invoice_button.set_sensitive(false);
         self.order_info_model.update_model(new_invoice.order_info());
         self.summary_model
-            .update_model(&new_invoice.summary(&self.db_provider));
+            .update_values(&new_invoice.summary(&self.db_provider));
         self.items_model.clear_model();
 
         self.invoice.replace(new_invoice)

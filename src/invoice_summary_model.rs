@@ -43,7 +43,7 @@ impl InvoiceSummaryModel {
         }
     }
 
-    pub fn update_model(&self, summary: &InvoiceSummary) {
+    pub fn update_values(&self, summary: &InvoiceSummary) {
         self.list_store.clear();
         self.list_store.insert_with_values(
             None,
