@@ -1,6 +1,8 @@
 use gtk;
 use gtk::prelude::*;
 
+const DEFAULT_ROW_HEIGHT: i32 = 35;
+
 pub fn default_column(
     title: &str,
     tree_view: &gtk::TreeView,
@@ -9,6 +11,7 @@ pub fn default_column(
     let id = columns.len() as i32;
     let renderer = gtk::CellRendererText::new();
     renderer.set_property_xalign(0.0);
+    renderer.set_fixed_size(-1, DEFAULT_ROW_HEIGHT);
 
     let column = gtk::TreeViewColumn::new();
     column.set_title(title);
@@ -34,6 +37,7 @@ pub fn default_combo_column(
     let id = columns.len() as i32;
 
     let renderer = gtk::CellRendererCombo::new();
+    renderer.set_fixed_size(-1, DEFAULT_ROW_HEIGHT);
     renderer.set_visible(true);
     renderer.set_property_editable(true);
     renderer.set_property_model(Some(combo_model));

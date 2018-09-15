@@ -31,6 +31,7 @@ pub struct NewInvoicePage {
     pub invoice: Rc<RefCell<Invoice>>,
     selected_item_id: Rc<Cell<Option<ItemId>>>,
     // TODO - make this better
+    next_order_number: Rc<Cell<OrderNumber>>,
     default_item_lumber_type: String,
     db_provider: DbProvider,
 }
@@ -48,7 +49,17 @@ impl NewInvoicePage {
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let horizontal_layout = gtk::Grid::new();
         let selected_item_id = Rc::new(Cell::new(None));
-        let invoice = Rc::new(RefCell::new(Invoice::new(1)));
+
+        // TODO - hacky, fix this
+        let next_order_number = Rc::new(Cell::new(0));
+        if db.borrow().load().is_ok() {
+            db.borrow()
+                .read(|db| next_order_number.set(db.next_free_order_number()))
+                .expect("Failed to read from database");
+        }
+
+        let invoice = Rc::new(RefCell::new(Invoice::new(next_order_number.get())));
+        next_order_number.set(next_order_number.get() + 1);
 
         let mut first_lumber_data = Lumber::new(String::new(), Money::zero(USD));
         db_provider
@@ -297,14 +308,17 @@ impl NewInvoicePage {
             items_model,
             summary_model,
             invoice,
+            next_order_number,
             selected_item_id,
             default_item_lumber_type,
             db_provider,
         }
     }
 
-    pub fn replace_invoice(&self, new_order_number: OrderNumber) -> Invoice {
-        let new_invoice = Invoice::new(new_order_number);
+    pub fn replace_invoice(&self) -> Invoice {
+        let next_num = self.next_order_number.get();
+        let new_invoice = Invoice::new(self.next_order_number.get());
+        self.next_order_number.set(next_num + 1);
 
         self.save_invoice_button.set_sensitive(false);
         self.order_info_model.update_model(new_invoice.order_info());
@@ -312,7 +326,7 @@ impl NewInvoicePage {
             .update_model(&new_invoice.summary(&self.db_provider));
         self.items_model.clear_model();
 
-        self.invoice.replace(Invoice::new(new_order_number))
+        self.invoice.replace(new_invoice)
     }
 }
 

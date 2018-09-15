@@ -8,7 +8,7 @@ extern crate gtk;
 
 use gio::prelude::*;
 use gtk::prelude::*;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::env::args;
 use std::rc::Rc;
 
@@ -34,7 +34,7 @@ use customer_search_page::CustomerSearchPage;
 use elis::lumber::Lumber;
 use elis::steel_cent::currency::USD;
 use elis::steel_cent::Money;
-use elis::{database_from_path, CustomerInfo, Database, OrderNumber, SiteInfo};
+use elis::{database_from_path, CustomerInfo, Database, SiteInfo};
 use invoice_search_page::InvoiceSearchPage;
 use new_customer_page::NewCustomerPage;
 use new_invoice_page::NewInvoicePage;
@@ -103,35 +103,13 @@ pub fn build_ui(application: &gtk::Application) {
     let customer_search_page = CustomerSearchPage::new(&mut note, db.clone());
     let site_info_page = SiteInfoPage::new(&mut note, db.clone());
 
-    // TODO - this should be provided by the db
-    let next_order_number: Rc<Cell<OrderNumber>> = Rc::new(Cell::new(1));
-
-    // hacky way to pick a starting number until db is usable
-    if db.borrow().load().is_ok() {
-        let mut next_order_num: OrderNumber = 0;
-        db.borrow()
-            .read(|db| {
-                for order_num in db.invoices.keys() {
-                    if *order_num > next_order_num {
-                        next_order_num = *order_num;
-                    }
-                }
-            }).expect("Failed to read from database");
-        next_order_num += 1;
-        println!("next order number = {}", next_order_num);
-        next_order_number.set(next_order_num);
-        let _ = new_invoice_page.replace_invoice(next_order_number.get());
-        next_order_number.set(next_order_num + 1);
-    }
-
     // TODO -  read notes on rustbreak panics in closures, corrupts db
     //  move this down into the page logic?
-    new_invoice_page.save_invoice_button.connect_clicked(
-        clone!(db, new_invoice_page, next_order_number => move |_| {
+    new_invoice_page
+        .save_invoice_button
+        .connect_clicked(clone!(db, new_invoice_page => move |_| {
 
-        let next_order_num = next_order_number.get();
-        let invoice = new_invoice_page.replace_invoice(next_order_num);
-        next_order_number.set(next_order_num + 1);
+        let invoice = new_invoice_page.replace_invoice();
 
         println!("Adding invoice {} to database", invoice.order_info().order_number());
 
@@ -148,8 +126,7 @@ pub fn build_ui(application: &gtk::Application) {
         }).expect("Failed to write to database");
 
         db.borrow().save().expect("Failed to save database");
-    }),
-    );
+    }));
 
     note.notebook.connect_switch_page(
         clone!(db, invoice_search_page => move |_nb, _page, page_index| {
