@@ -35,9 +35,9 @@ pub struct NewInvoicePage {
 
 impl NewInvoicePage {
     pub fn new(note: &mut NoteBook, db: Rc<RefCell<Database>>) -> Self {
-        let db_provider = DbProvider { db };
+        let db_provider = DbProvider { db: db.clone() };
         let order_info_model = OrderInfoModel::new();
-        let items_model = ItemsModel::new();
+        let items_model = ItemsModel::new(db.clone());
         let summary_model = InvoiceSummaryModel::new();
         let new_item_button = gtk::Button::new_with_label("Add");
         let delete_item_button = gtk::Button::new_with_label("Delete");
@@ -140,6 +140,30 @@ impl NewInvoicePage {
                     summary_model.update_model(&invoice.borrow().summary(&db_provider));
                 }
         }),
+        );
+
+        items_model.cell_renderers.lumber_type.connect_edited(
+            clone!(invoice, summary_model, items_model, db_provider => move |_, _, value| {
+                let (id, _selected) = items_model.get_selected();
+
+                if let Some(item_id) = id {
+                    let mut is_valid: bool = false;
+
+                    db_provider.db.borrow().read(|db| {
+                        if db.lumber_types.contains_key(value) {
+                            is_valid = true;
+                        }
+                    }).expect("Failed to read from database");
+
+                    if is_valid {
+                        invoice.borrow_mut().get_billable_item_mut(item_id)
+                            .set_lumber_type(value.to_string());
+                    }
+
+                    refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                    summary_model.update_model(&invoice.borrow().summary(&db_provider));
+                }
+            }),
         );
 
         items_model.cell_renderers.drying_method.connect_edited(

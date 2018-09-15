@@ -1,4 +1,5 @@
 // TODO - need to update sytle/consistency/etc
+// results/error-handling
 
 extern crate elis_lib as elis;
 extern crate gio;
@@ -124,6 +125,7 @@ pub fn build_ui(application: &gtk::Application) {
     }
 
     // TODO -  read notes on rustbreak panics in closures, corrupts db
+    //  move this down into the page logic?
     new_invoice_page.save_invoice_button.connect_clicked(
         clone!(db, new_invoice_page, next_order_number => move |_| {
 

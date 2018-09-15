@@ -1,8 +1,10 @@
 use elis::lumber::{DryingMethod, Grade, Specification};
 use elis::steel_cent::formatting::us_style;
-use elis::{BillableItem, LumberFobCostProvider, SiteSalesTaxProvider};
+use elis::{BillableItem, Database, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, Type};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use default_column::{default_column, default_combo_column};
 
@@ -11,7 +13,7 @@ pub type ItemId = usize;
 // TODO - only providing editables?
 #[derive(Clone)]
 pub struct CellRenderers {
-    pub lumber_type: gtk::CellRendererText,
+    pub lumber_type: gtk::CellRendererCombo,
     pub drying_method: gtk::CellRendererCombo,
     pub grade: gtk::CellRendererCombo,
     pub spec: gtk::CellRendererCombo,
@@ -27,10 +29,11 @@ pub struct ItemsModel {
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
     pub cell_renderers: CellRenderers,
+    db: Rc<RefCell<Database>>,
 }
 
 impl ItemsModel {
-    pub fn new() -> Self {
+    pub fn new(db: Rc<RefCell<Database>>) -> Self {
         let scrolled_win = gtk::ScrolledWindow::new(None, None);
         let tree_view = gtk::TreeView::new();
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
@@ -52,7 +55,16 @@ impl ItemsModel {
             Type::U32, // [10] item_id
         ]);
 
-        let rend_lumber_type = default_column("Lumber Type", &tree_view, &mut columns);
+        let combo_model = gtk::ListStore::new(&[Type::String]);
+        db.borrow()
+            .read(|db| {
+                for lt_name in db.lumber_types.keys() {
+                    combo_model.insert_with_values(None, &[0], &[lt_name]);
+                }
+            }).expect("Failed to read from database");
+
+        let rend_lumber_type =
+            default_combo_column("Lumber Type", &combo_model, &tree_view, &mut columns);
 
         let combo_model = gtk::ListStore::new(&[Type::String]);
         for dm in DryingMethod::enumerate() {
@@ -105,6 +117,7 @@ impl ItemsModel {
                 board_dimensions: rend_board_dimensions,
                 quantity: rend_quantity,
             },
+            db,
         }
     }
 
