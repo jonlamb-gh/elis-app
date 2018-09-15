@@ -1,5 +1,5 @@
 // TODO - this is getter very ugly
-
+// connect_events() method?
 use elis::lumber::{DryingMethod, Grade, Lumber, Specification};
 use elis::steel_cent::{currency::USD, Money};
 use elis::{

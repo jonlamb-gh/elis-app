@@ -2,6 +2,8 @@ use elis::CustomerInfo;
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
 
+use default_column::default_column;
+
 #[derive(Clone)]
 pub struct CustomerQueryResultsModel {
     pub scrolled_win: gtk::ScrolledWindow,
@@ -23,10 +25,10 @@ impl CustomerQueryResultsModel {
             Type::String, // notes
         ]);
 
-        append_column("Name", &mut columns, &tree_view, None);
-        append_column("Address", &mut columns, &tree_view, None);
-        append_column("Phone Number", &mut columns, &tree_view, None);
-        append_column("Notes", &mut columns, &tree_view, None);
+        default_column("Name", &tree_view, &mut columns);
+        default_column("Address", &tree_view, &mut columns);
+        default_column("Phone Number", &tree_view, &mut columns);
+        default_column("Notes", &tree_view, &mut columns);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
@@ -58,30 +60,4 @@ impl CustomerQueryResultsModel {
             ],
         );
     }
-}
-
-// TODO - min/max width pattern
-fn append_column(
-    title: &str,
-    v: &mut Vec<gtk::TreeViewColumn>,
-    tree_view: &gtk::TreeView,
-    max_width: Option<i32>,
-) {
-    let id = v.len() as i32;
-    let renderer = gtk::CellRendererText::new();
-
-    let column = gtk::TreeViewColumn::new();
-    column.set_title(title);
-    column.set_resizable(true);
-    if let Some(max_width) = max_width {
-        column.set_max_width(max_width);
-        column.set_expand(true);
-    }
-    column.set_min_width(50);
-    column.pack_start(&renderer, true);
-    column.add_attribute(&renderer, "text", id);
-    column.set_clickable(true);
-    column.set_sort_column_id(id);
-    tree_view.append_column(&column);
-    v.push(column);
 }

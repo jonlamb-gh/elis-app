@@ -43,7 +43,7 @@ impl SiteInfoPage {
 
     pub fn update_models(&self) {
         // TODO - need to fix this, row disappears when updated, but is there if resized
-        //self.site_info_model.update_model();
+        self.site_info_model.update_model();
         self.lumber_type_model.update_model();
     }
 }
