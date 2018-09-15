@@ -4,7 +4,7 @@ use gtk::{self, SelectionMode, Type};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use default_column::{default_column, default_combo_column};
+use default_column::{default_center_column, default_column, default_combo_column};
 #[derive(Clone)]
 pub struct CellRenderers {
     pub customer: gtk::CellRendererCombo,
@@ -25,14 +25,14 @@ impl OrderInfoModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String, // customer name
-            Type::String, // confirms with
-            Type::U32,    // order number
-            Type::String, // est weight
-            Type::String, // order date
-            Type::String, // shipment date
-            Type::String, // site name
-            Type::Bool,   // will call
+            Type::String, // [0] customer name
+            Type::String, // [1] confirms with
+            Type::U32,    // [2] order number
+            Type::String, // [3] est weight
+            Type::String, // [4] order date
+            Type::String, // [5] shipment date
+            Type::String, // [6] site name
+            Type::Bool,   // [7] will call
         ]);
 
         let combo_model = gtk::ListStore::new(&[Type::String]);
@@ -46,23 +46,17 @@ impl OrderInfoModel {
         let rend_customer =
             default_combo_column("Customer", &combo_model, &tree_view, &mut columns);
 
-        let renderer = default_column("Confirms with", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Confirms with", &tree_view, &mut columns);
 
-        let renderer = default_column("Order Number", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Order Number", &tree_view, &mut columns);
 
-        let renderer = default_column("Est Weight", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Est Weight", &tree_view, &mut columns);
 
-        let renderer = default_column("Order Date", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Order Date", &tree_view, &mut columns);
 
-        let renderer = default_column("Shipment Date", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Shipment Date", &tree_view, &mut columns);
 
-        let renderer = default_column("Site", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Site", &tree_view, &mut columns);
 
         default_column("Will Call", &tree_view, &mut columns);
 

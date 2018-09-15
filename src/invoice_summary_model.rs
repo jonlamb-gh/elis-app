@@ -8,8 +8,8 @@ use default_column::default_column;
 #[derive(Clone)]
 pub struct InvoiceSummaryModel {
     pub tree_view: gtk::TreeView,
-    pub list_store: gtk::ListStore,
-    pub columns: Vec<gtk::TreeViewColumn>,
+    list_store: gtk::ListStore,
+    columns: Vec<gtk::TreeViewColumn>,
 }
 
 impl InvoiceSummaryModel {
@@ -18,11 +18,11 @@ impl InvoiceSummaryModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::U32,    // total pieces
-            Type::String, // estimated shipping
-            Type::String, // sub total
-            Type::String, // sales tax
-            Type::String, // total cost
+            Type::U32,    // [0] total pieces
+            Type::String, // [1] estimated shipping
+            Type::String, // [2] sub total
+            Type::String, // [3] sales tax
+            Type::String, // [4] total cost
         ]);
 
         default_column("Total Pieces", &tree_view, &mut columns);
