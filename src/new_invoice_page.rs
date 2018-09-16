@@ -51,17 +51,24 @@ impl NewInvoicePage {
         let selected_item_id = Rc::new(Cell::new(None));
 
         // TODO - hacky, fix this
+        let mut order_info = OrderInfo::default();
         let next_order_number = Rc::new(Cell::new(0));
         if db.borrow().load().is_ok() {
             db.borrow()
-                .read(|db| next_order_number.set(db.next_free_order_number()))
-                .expect("Failed to read from database");
+                .read(|db| {
+                    next_order_number.set(db.next_free_order_number());
+
+                    for c in db.customers.keys() {
+                        order_info.set_customer_name(c.to_string());
+                        break;
+                    }
+                }).expect("Failed to read from database");
         }
 
-        let invoice = Rc::new(RefCell::new(Invoice::new(OrderInfo::new(
-            next_order_number.get(),
-        ))));
-        next_order_number.set(next_order_number.get() + 1);
+        order_info.set_order_number(next_order_number.get());
+        next_order_number.set(order_info.order_number() + 1);
+
+        let invoice = Rc::new(RefCell::new(Invoice::new(order_info)));
 
         // TODO - hacky, fix this
         let mut first_lumber_data = Lumber::new(String::new(), Money::zero(USD));
