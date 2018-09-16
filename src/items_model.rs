@@ -24,7 +24,7 @@ pub struct CellRenderers {
 
 #[derive(Clone)]
 pub struct ItemsModel {
-    pub scrolled_win: gtk::ScrolledWindow,
+    scrolled_win: gtk::ScrolledWindow,
     pub tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
@@ -121,11 +121,15 @@ impl ItemsModel {
         }
     }
 
-    pub fn clear_model(&self) {
+    pub fn get_widget(&self) -> &gtk::ScrolledWindow {
+        &self.scrolled_win
+    }
+
+    pub fn clear(&self) {
         self.list_store.clear();
     }
 
-    pub fn update_model<T>(&self, item: &BillableItem, item_id: ItemId, db_provider: &T)
+    pub fn update_values<T>(&self, item: &BillableItem, item_id: ItemId, db_provider: &T)
     where
         T: LumberFobCostProvider + SiteSalesTaxProvider,
     {

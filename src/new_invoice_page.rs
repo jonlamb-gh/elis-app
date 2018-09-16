@@ -274,8 +274,6 @@ impl NewInvoicePage {
 
         order_info_model.cell_renderers.customer.connect_edited(
             clone!(invoice, order_info_model, summary_model, items_model, db_provider => move |_, _, value| {
-                println!("customer '{}'", value);
-
                 let mut is_valid: bool = false;
 
                 db_provider.db.borrow().read(|db| {
@@ -298,7 +296,7 @@ impl NewInvoicePage {
 
         //vertical_layout.set_spacing(50);
         vertical_layout.pack_start(order_info_model.get_widget(), false, true, 0);
-        vertical_layout.pack_start(&items_model.scrolled_win, true, true, 0);
+        vertical_layout.pack_start(items_model.get_widget(), true, true, 0);
         horizontal_layout.attach(&new_item_button, 0, 0, 1, 1);
         horizontal_layout.attach(&delete_item_button, 1, 0, 1, 1);
         horizontal_layout.attach(&clear_invoice_button, 2, 0, 1, 1);
@@ -346,7 +344,7 @@ impl NewInvoicePage {
             .update_values(new_invoice.order_info());
         self.summary_model
             .update_values(&new_invoice.summary(&self.db_provider));
-        self.items_model.clear_model();
+        self.items_model.clear();
 
         self.invoice.replace(new_invoice)
     }
@@ -356,8 +354,8 @@ fn refresh_items_model<T>(invoice: &Invoice, model: &ItemsModel, db_provider: &T
 where
     T: LumberFobCostProvider + SiteSalesTaxProvider,
 {
-    model.clear_model();
+    model.clear();
     for (id, item) in invoice.billable_items().iter().enumerate() {
-        model.update_model(item, id as ItemId, db_provider);
+        model.update_values(item, id as ItemId, db_provider);
     }
 }
