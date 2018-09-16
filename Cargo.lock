@@ -136,12 +136,13 @@ dependencies = [
  "gio 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pango 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "elis-lib"
 version = "0.0.1"
-source = "git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel#44cd09544ae828b83732ba311d282be0ef66973d"
+source = "git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel#8c132ad39e91aba5c87055266037b8960c1ea94b"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "dimensioned 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",

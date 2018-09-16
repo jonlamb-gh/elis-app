@@ -11,3 +11,4 @@ features = ["v3_18"]
 elis-lib = { git = "https://github.com/jonlamb-gh/elis-lib.git", branch = "devel" }
 gio = "^0"
 glib = "^0"
+pango = "^0"

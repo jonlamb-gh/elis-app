@@ -3,6 +3,7 @@ use elis::steel_cent::formatting::us_style;
 use elis::{BillableItem, Database, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, Type};
+use pango::WrapMode;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -87,6 +88,8 @@ impl ItemsModel {
 
         let rend_description = default_column("Description", &tree_view, &mut columns);
         rend_description.set_property_editable(true);
+        rend_description.set_property_wrap_mode(WrapMode::WordChar);
+        rend_description.set_property_wrap_width(200);
 
         let rend_board_dimensions =
             default_column("Dimensions (T x W x L)", &tree_view, &mut columns);

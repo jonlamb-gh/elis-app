@@ -1,6 +1,7 @@
 use elis::{Database, OrderInfo};
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
+use pango::WrapMode;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -8,6 +9,7 @@ use default_column::{default_center_column, default_column, default_combo_column
 #[derive(Clone)]
 pub struct CellRenderers {
     pub customer: gtk::CellRendererCombo,
+    pub confirms_with: gtk::CellRendererText,
 }
 
 #[derive(Clone)]
@@ -46,7 +48,10 @@ impl OrderInfoModel {
         let rend_customer =
             default_combo_column("Customer", &combo_model, &tree_view, &mut columns);
 
-        default_center_column("Confirms with", &tree_view, &mut columns);
+        let rend_confirms_with = default_center_column("Confirms with", &tree_view, &mut columns);
+        rend_confirms_with.set_property_editable(true);
+        rend_confirms_with.set_property_wrap_mode(WrapMode::WordChar);
+        rend_confirms_with.set_property_wrap_width(200);
 
         default_center_column("Order Number", &tree_view, &mut columns);
 
@@ -71,6 +76,7 @@ impl OrderInfoModel {
             columns,
             cell_renderers: CellRenderers {
                 customer: rend_customer,
+                confirms_with: rend_confirms_with,
             },
             db,
         }

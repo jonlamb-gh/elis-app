@@ -16,6 +16,7 @@ extern crate elis_lib as elis;
 extern crate gio;
 extern crate glib;
 extern crate gtk;
+extern crate pango;
 
 use gio::prelude::*;
 use gtk::prelude::*;

@@ -294,6 +294,18 @@ impl NewInvoicePage {
         }),
         );
 
+        order_info_model.cell_renderers.confirms_with.connect_edited(
+            clone!(invoice, order_info_model, summary_model, items_model, db_provider => move |_, _, value| {
+                let mut new_order_info = invoice.borrow().order_info().clone();
+                new_order_info.set_confirms_with(value.to_string());
+                invoice.borrow_mut().set_order_info(new_order_info);
+
+                refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                summary_model.update_values(&invoice.borrow().summary(&db_provider));
+                order_info_model.update_values(invoice.borrow().order_info());
+        }),
+        );
+
         //vertical_layout.set_spacing(50);
         vertical_layout.pack_start(order_info_model.get_widget(), false, true, 0);
         vertical_layout.pack_start(items_model.get_widget(), true, true, 0);
