@@ -8,6 +8,8 @@
 //
 // page level modules:
 // update_models()?
+// load_initial_values()?
+// connect_handlers()?
 
 extern crate elis_lib as elis;
 extern crate gio;

@@ -8,7 +8,7 @@ use default_column::default_column;
 
 #[derive(Clone)]
 pub struct SiteInfoModel {
-    pub tree_view: gtk::TreeView,
+    tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
     db: Rc<RefCell<Database>>,
@@ -20,11 +20,11 @@ impl SiteInfoModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String, // site name
-            Type::String, // address
-            Type::String, // phone number
-            Type::String, // fax number
-            Type::String, // sales tax
+            Type::String, // [0] site name
+            Type::String, // [1] address
+            Type::String, // [2] phone number
+            Type::String, // [3] fax number
+            Type::String, // [4] sales tax
         ]);
 
         let renderer = default_column("Site Name", &tree_view, &mut columns);
@@ -69,9 +69,13 @@ impl SiteInfoModel {
         }
     }
 
+    pub fn get_widget(&self) -> &gtk::TreeView {
+        &self.tree_view
+    }
+
     // TODO - move out of db closure
     // TODO - need to fix this, row disappears when updated, but is there if resized
-    pub fn update_model(&self) {
+    pub fn update_values(&self) {
         /*
         self.list_store.clear();
 

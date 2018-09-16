@@ -9,7 +9,7 @@ use default_column::default_column;
 
 #[derive(Clone)]
 pub struct LumberTypeModel {
-    pub scrolled_win: gtk::ScrolledWindow,
+    scrolled_win: gtk::ScrolledWindow,
     tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
@@ -23,8 +23,8 @@ impl LumberTypeModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::String, // type name
-            Type::String, // FOB price
+            Type::String, // [0] type name
+            Type::String, // [1] FOB price
         ]);
 
         default_column("Lumber Type", &tree_view, &mut columns);
@@ -45,7 +45,11 @@ impl LumberTypeModel {
         }
     }
 
-    pub fn update_model(&self) {
+    pub fn get_widget(&self) -> &gtk::ScrolledWindow {
+        &self.scrolled_win
+    }
+
+    pub fn update_values(&self) {
         self.list_store.clear();
 
         self.db

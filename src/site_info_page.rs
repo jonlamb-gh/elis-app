@@ -22,11 +22,11 @@ impl SiteInfoPage {
         let lumber_type_model = LumberTypeModel::new(db.clone());
         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
-        site_info_model.update_model();
-        lumber_type_model.update_model();
+        site_info_model.update_values();
+        lumber_type_model.update_values();
 
-        vertical_layout.pack_start(&site_info_model.tree_view, false, false, 0);
-        vertical_layout.pack_start(&lumber_type_model.scrolled_win, true, true, 0);
+        vertical_layout.pack_start(site_info_model.get_widget(), false, false, 0);
+        vertical_layout.pack_start(lumber_type_model.get_widget(), true, true, 0);
 
         let vertical_layout: Widget = vertical_layout.upcast();
         let page_index = note.create_tab("Site Info", &vertical_layout).unwrap();
@@ -43,7 +43,7 @@ impl SiteInfoPage {
 
     pub fn update_models(&self) {
         // TODO - need to fix this, row disappears when updated, but is there if resized
-        self.site_info_model.update_model();
-        self.lumber_type_model.update_model();
+        self.site_info_model.update_values();
+        self.lumber_type_model.update_values();
     }
 }
