@@ -13,7 +13,7 @@ pub struct SiteInfoPage {
     vertical_layout: gtk::Box,
     site_info_model: SiteInfoModel,
     lumber_type_model: LumberTypeModel,
-    pub page_index: u32,
+    page_index: u32,
 }
 
 impl SiteInfoPage {
@@ -39,6 +39,10 @@ impl SiteInfoPage {
             lumber_type_model,
             page_index,
         }
+    }
+
+    pub fn index(&self) -> u32 {
+        self.page_index
     }
 
     pub fn update_models(&self) {

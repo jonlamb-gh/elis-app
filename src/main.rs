@@ -7,6 +7,7 @@
 // clear()?
 //
 // page level modules:
+// page_index()
 // update_models()?
 // load_initial_values()?
 // connect_handlers()?
@@ -138,18 +139,16 @@ pub fn build_ui(application: &gtk::Application) {
         db.borrow().save().expect("Failed to save database");
     }));
 
+    // TODO - hacky
     note.notebook.connect_switch_page(
         clone!(db, invoice_search_page => move |_nb, _page, page_index| {
-            println!("switch-page : page = {}", page_index);
-
-            // TODO - give page a db ref ?
-            if page_index == invoice_search_page.page_index {
+            if page_index == invoice_search_page.index() {
                 db.borrow().read(|db| {
                     invoice_search_page.set_results(db.invoices.values());
                 }).expect("Failed to read from database");
-            } else if page_index == site_info_page.page_index {
+            } else if page_index == site_info_page.index() {
                 site_info_page.update_models();
-            } else if page_index == customer_search_page.page_index {
+            } else if page_index == customer_search_page.index() {
                 db.borrow().read(|db| {
                     customer_search_page.set_results(db.customers.values());
                 }).expect("Failed to read from database");

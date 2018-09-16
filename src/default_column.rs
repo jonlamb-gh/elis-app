@@ -38,6 +38,16 @@ pub fn default_center_column(
     renderer
 }
 
+pub fn default_right_column(
+    title: &str,
+    tree_view: &gtk::TreeView,
+    columns: &mut Vec<gtk::TreeViewColumn>,
+) -> gtk::CellRendererText {
+    let renderer = default_column(title, tree_view, columns);
+    renderer.set_property_xalign(1.0);
+    renderer
+}
+
 pub fn default_combo_column(
     title: &str,
     combo_model: &gtk::ListStore,

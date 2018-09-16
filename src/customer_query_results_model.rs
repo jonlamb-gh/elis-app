@@ -6,7 +6,7 @@ use default_column::default_column;
 
 #[derive(Clone)]
 pub struct CustomerQueryResultsModel {
-    pub scrolled_win: gtk::ScrolledWindow,
+    scrolled_win: gtk::ScrolledWindow,
     tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
@@ -44,11 +44,15 @@ impl CustomerQueryResultsModel {
         }
     }
 
-    pub fn clear_model(&self) {
+    pub fn get_widget(&self) -> &gtk::ScrolledWindow {
+        &self.scrolled_win
+    }
+
+    pub fn clear(&self) {
         self.list_store.clear();
     }
 
-    pub fn update_model(&self, customer_info: &CustomerInfo) {
+    pub fn update_values(&self, customer_info: &CustomerInfo) {
         self.list_store.insert_with_values(
             None,
             &[0, 1, 2, 3],

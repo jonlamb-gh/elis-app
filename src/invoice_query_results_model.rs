@@ -5,11 +5,11 @@ use elis::{Invoice, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
 use gtk::{self, SelectionMode, Type};
 
-use default_column::default_column;
+use default_column::{default_center_column, default_column, default_right_column};
 
 #[derive(Clone)]
 pub struct InvoiceQueryResultsModel {
-    pub scrolled_win: gtk::ScrolledWindow,
+    scrolled_win: gtk::ScrolledWindow,
     tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
@@ -22,27 +22,21 @@ impl InvoiceQueryResultsModel {
         let mut columns: Vec<gtk::TreeViewColumn> = Vec::new();
 
         let list_store = gtk::ListStore::new(&[
-            Type::U32,    // order number
-            Type::String, // customer
-            Type::String, // order date
-            Type::String, // shipment date
-            Type::Bool,   // will call
-            Type::U32,    // total pieces
-            Type::String, // total cost
+            Type::U32,    // [0] order number
+            Type::String, // [1] customer
+            Type::String, // [2] order date
+            Type::String, // [3] shipment date
+            Type::Bool,   // [4] will call
+            Type::U32,    // [5] total pieces
+            Type::String, // [6] total cost
         ]);
 
-        let renderer = default_column("Order Number", &tree_view, &mut columns);
-        renderer.set_property_xalign(1.0);
-        let renderer = default_column("Customer", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
-        let renderer = default_column("Order Date", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
-        let renderer = default_column("Shipment Date", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
-        let renderer = default_column("Will Call", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
-        let renderer = default_column("Total Pieces", &tree_view, &mut columns);
-        renderer.set_property_xalign(0.5);
+        default_center_column("Order Number", &tree_view, &mut columns);
+        default_right_column("Customer", &tree_view, &mut columns);
+        default_center_column("Order Date", &tree_view, &mut columns);
+        default_center_column("Shipment Date", &tree_view, &mut columns);
+        default_center_column("Will Call", &tree_view, &mut columns);
+        default_center_column("Total Pieces", &tree_view, &mut columns);
         default_column("Total Cost", &tree_view, &mut columns);
 
         tree_view.set_model(Some(&list_store));
@@ -59,11 +53,15 @@ impl InvoiceQueryResultsModel {
         }
     }
 
-    pub fn clear_model(&self) {
+    pub fn get_widget(&self) -> &gtk::ScrolledWindow {
+        &self.scrolled_win
+    }
+
+    pub fn clear(&self) {
         self.list_store.clear();
     }
 
-    pub fn update_model<T>(&self, invoice: &Invoice, db_provider: &T)
+    pub fn update_values<T>(&self, invoice: &Invoice, db_provider: &T)
     where
         T: LumberFobCostProvider + SiteSalesTaxProvider,
     {
