@@ -3,8 +3,8 @@
 use elis::lumber::{DryingMethod, Grade, Lumber, Specification};
 use elis::steel_cent::{currency::USD, Money};
 use elis::{
-    BillableItem, BoardDimensions, Database, Invoice, LumberFobCostProvider, OrderNumber,
-    SiteSalesTaxProvider,
+    BillableItem, BoardDimensions, Database, Invoice, LumberFobCostProvider, OrderInfo,
+    OrderNumber, SiteSalesTaxProvider,
 };
 use glib::object::Cast;
 use gtk::prelude::*;
@@ -58,7 +58,9 @@ impl NewInvoicePage {
                 .expect("Failed to read from database");
         }
 
-        let invoice = Rc::new(RefCell::new(Invoice::new(next_order_number.get())));
+        let invoice = Rc::new(RefCell::new(Invoice::new(OrderInfo::new(
+            next_order_number.get(),
+        ))));
         next_order_number.set(next_order_number.get() + 1);
 
         // TODO - hacky, fix this
@@ -320,10 +322,17 @@ impl NewInvoicePage {
         }
     }
 
+    // TODO - get rid of the need for this
     pub fn replace_invoice(&self) -> Invoice {
         let next_num = self.next_order_number.get();
-        let new_invoice = Invoice::new(self.next_order_number.get());
         self.next_order_number.set(next_num + 1);
+
+        let mut order_info = OrderInfo::new(next_num);
+        let prev_order_info = self.invoice.borrow().order_info().clone();
+        order_info.set_customer_name(prev_order_info.customer_name().to_string());
+        order_info.set_site_name(prev_order_info.site_name().to_string());
+
+        let new_invoice = Invoice::new(order_info);
 
         self.save_invoice_button.set_sensitive(false);
         self.order_info_model
