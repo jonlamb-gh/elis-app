@@ -80,3 +80,34 @@ pub fn default_combo_column(
 
     renderer
 }
+
+pub fn default_toggle_column(
+    title: &str,
+    tree_view: &gtk::TreeView,
+    columns: &mut Vec<gtk::TreeViewColumn>,
+) -> gtk::CellRendererToggle {
+    let id = columns.len() as i32;
+
+    let renderer = gtk::CellRendererToggle::new();
+    renderer.set_fixed_size(-1, DEFAULT_ROW_HEIGHT);
+    renderer.set_visible(true);
+    renderer.set_activatable(true);
+    renderer.set_sensitive(true);
+    renderer.set_property_xalign(0.0);
+
+    let column = gtk::TreeViewColumn::new();
+    column.set_visible(true);
+    column.set_title(title);
+    column.set_resizable(true);
+    column.set_expand(false);
+    column.set_min_width(50);
+    column.pack_start(&renderer, true);
+    column.add_attribute(&renderer, "text", id);
+    column.set_clickable(true);
+    column.set_sort_column_id(id);
+
+    tree_view.append_column(&column);
+    columns.push(column);
+
+    renderer
+}

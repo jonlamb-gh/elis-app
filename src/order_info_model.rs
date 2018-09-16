@@ -5,7 +5,7 @@ use pango::WrapMode;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use default_column::{default_center_column, default_column, default_combo_column};
+use default_column::{default_center_column, default_combo_column, default_toggle_column};
 #[derive(Clone)]
 pub struct CellRenderers {
     pub customer: gtk::CellRendererCombo,
@@ -63,7 +63,8 @@ impl OrderInfoModel {
 
         default_center_column("Site", &tree_view, &mut columns);
 
-        default_column("Will Call", &tree_view, &mut columns);
+        //default_column("Will Call", &tree_view, &mut columns);
+        default_toggle_column("Will Call", &tree_view, &mut columns);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
