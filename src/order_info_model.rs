@@ -12,7 +12,7 @@ pub struct CellRenderers {
 
 #[derive(Clone)]
 pub struct OrderInfoModel {
-    pub tree_view: gtk::TreeView,
+    tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
     pub cell_renderers: CellRenderers,
@@ -76,7 +76,11 @@ impl OrderInfoModel {
         }
     }
 
-    pub fn update_model(&self, order_info: &OrderInfo) {
+    pub fn get_widget(&self) -> &gtk::TreeView {
+        &self.tree_view
+    }
+
+    pub fn update_values(&self, order_info: &OrderInfo) {
         self.list_store.clear();
         self.list_store.insert_with_values(
             None,

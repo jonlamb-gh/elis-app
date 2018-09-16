@@ -50,6 +50,7 @@ pub fn default_combo_column(
     renderer.set_fixed_size(-1, DEFAULT_ROW_HEIGHT);
     renderer.set_visible(true);
     renderer.set_property_editable(true);
+    renderer.set_sensitive(true);
     renderer.set_property_model(Some(combo_model));
     renderer.set_property_text_column(0);
 

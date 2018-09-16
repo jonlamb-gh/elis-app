@@ -61,10 +61,10 @@ impl NewInvoicePage {
         let invoice = Rc::new(RefCell::new(Invoice::new(next_order_number.get())));
         next_order_number.set(next_order_number.get() + 1);
 
+        // TODO - hacky, fix this
         let mut first_lumber_data = Lumber::new(String::new(), Money::zero(USD));
-        db_provider
-            .db
-            .borrow()
+        let mut order_info = invoice.borrow().order_info().clone();
+        db.borrow()
             .read(|db| {
                 let data = db
                     .lumber_types
@@ -72,10 +72,15 @@ impl NewInvoicePage {
                     .next()
                     .expect("Failed to get lumber type");
                 first_lumber_data = data.clone();
+
+                // get the site name
+                order_info.set_site_name(db.site_info.site_name().to_string());
             }).expect("Failed to read from database");
         let default_item_lumber_type = String::from(first_lumber_data.type_name());
 
-        order_info_model.update_model(invoice.borrow().order_info());
+        invoice.borrow_mut().set_order_info(order_info);
+
+        order_info_model.update_values(invoice.borrow().order_info());
         summary_model.update_values(&invoice.borrow().summary(&db_provider));
 
         new_item_button.set_sensitive(true);
@@ -95,7 +100,7 @@ impl NewInvoicePage {
         );
 
         delete_item_button.connect_clicked(
-            clone!(db_provider, invoice, selected_item_id, items_model,summary_model, save_invoice_button => move |_| {
+            clone!(db_provider, invoice, selected_item_id, items_model, summary_model, save_invoice_button => move |_| {
             if let Some(item_id) = selected_item_id.get() {
                 invoice.borrow_mut().remove_billable_item(item_id);
                 refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
@@ -277,13 +282,13 @@ impl NewInvoicePage {
 
                     refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
                     summary_model.update_values(&invoice.borrow().summary(&db_provider));
-                    order_info_model.update_model(invoice.borrow().order_info());
+                    order_info_model.update_values(invoice.borrow().order_info());
                 }
         }),
         );
 
         //vertical_layout.set_spacing(50);
-        vertical_layout.pack_start(&order_info_model.tree_view, false, true, 0);
+        vertical_layout.pack_start(order_info_model.get_widget(), false, true, 0);
         vertical_layout.pack_start(&items_model.scrolled_win, true, true, 0);
         horizontal_layout.attach(&new_item_button, 0, 0, 1, 1);
         horizontal_layout.attach(&delete_item_button, 1, 0, 1, 1);
@@ -321,7 +326,8 @@ impl NewInvoicePage {
         self.next_order_number.set(next_num + 1);
 
         self.save_invoice_button.set_sensitive(false);
-        self.order_info_model.update_model(new_invoice.order_info());
+        self.order_info_model
+            .update_values(new_invoice.order_info());
         self.summary_model
             .update_values(&new_invoice.summary(&self.db_provider));
         self.items_model.clear_model();

@@ -1,6 +1,13 @@
 // TODO - need to update sytle/consistency/etc
 // results/error-handling
+//
+// model level modules:
 // update_values()
+// get_widget()
+// clear()?
+//
+// page level modules:
+// update_models()?
 
 extern crate elis_lib as elis;
 extern crate gio;

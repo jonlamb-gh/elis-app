@@ -141,7 +141,7 @@ dependencies = [
 [[package]]
 name = "elis-lib"
 version = "0.0.1"
-source = "git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel#ec6ab4bb0b3ff1c145b8af5bb2c902c568aa7390"
+source = "git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel#a9b9704b58456b17d65103ce85731577b7f3ee7b"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "dimensioned 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
