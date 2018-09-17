@@ -310,7 +310,6 @@ impl NewInvoicePage {
         order_info_model.cell_renderers.will_call.connect_toggled(
             clone!(invoice, order_info_model, summary_model, items_model, db_provider => move |_, _| {
                 let will_call = !invoice.borrow().order_info().will_call();
-                println!("wc {}", will_call);
                 let mut new_order_info = invoice.borrow().order_info().clone();
                 new_order_info.set_will_call(will_call);
                 invoice.borrow_mut().set_order_info(new_order_info);
@@ -319,6 +318,13 @@ impl NewInvoicePage {
                 summary_model.update_values(&invoice.borrow().summary(&db_provider));
                 order_info_model.update_values(invoice.borrow().order_info());
         }));
+
+        order_info_model.get_widget().connect_focus_out_event(
+            clone!(order_info_model => move |_, _| {
+                order_info_model.unselect();
+                Inhibit(false)
+        }),
+        );
 
         //vertical_layout.set_spacing(50);
         vertical_layout.pack_start(order_info_model.get_widget(), false, true, 0);
