@@ -1,6 +1,14 @@
 [package]
 name = "elis-app"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["jonlamb-gh <lamb.jon.io@gmail.com>"]
 
+[dependencies.gtk]
+version = "0.4.0"
+features = ["v3_18"]
+
 [dependencies]
+elis-lib = { git = "https://github.com/jonlamb-gh/elis-lib.git", branch = "master" }
+gio = "^0"
+glib = "^0"
+pango = "^0"
