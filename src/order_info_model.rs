@@ -10,6 +10,7 @@ use default_column::{default_center_column, default_combo_column, default_toggle
 pub struct CellRenderers {
     pub customer: gtk::CellRendererCombo,
     pub confirms_with: gtk::CellRendererText,
+    pub will_call: gtk::CellRendererToggle,
 }
 
 #[derive(Clone)]
@@ -63,8 +64,7 @@ impl OrderInfoModel {
 
         default_center_column("Site", &tree_view, &mut columns);
 
-        //default_column("Will Call", &tree_view, &mut columns);
-        default_toggle_column("Will Call", &tree_view, &mut columns);
+        let rend_will_call = default_toggle_column("Will Call", &tree_view, &mut columns);
 
         tree_view.set_model(Some(&list_store));
         tree_view.set_headers_visible(true);
@@ -78,6 +78,7 @@ impl OrderInfoModel {
             cell_renderers: CellRenderers {
                 customer: rend_customer,
                 confirms_with: rend_confirms_with,
+                will_call: rend_will_call,
             },
             db,
         }
@@ -103,5 +104,9 @@ impl OrderInfoModel {
                 &order_info.will_call(),
             ],
         );
+    }
+
+    pub fn unselect(&self) {
+        self.tree_view.get_selection().unselect_all();
     }
 }

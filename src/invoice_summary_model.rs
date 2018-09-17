@@ -7,7 +7,7 @@ use default_column::default_column;
 
 #[derive(Clone)]
 pub struct InvoiceSummaryModel {
-    pub tree_view: gtk::TreeView,
+    tree_view: gtk::TreeView,
     list_store: gtk::ListStore,
     columns: Vec<gtk::TreeViewColumn>,
 }
@@ -41,6 +41,10 @@ impl InvoiceSummaryModel {
             list_store,
             columns,
         }
+    }
+
+    pub fn get_widget(&self) -> &gtk::TreeView {
+        &self.tree_view
     }
 
     pub fn update_values(&self, summary: &InvoiceSummary) {

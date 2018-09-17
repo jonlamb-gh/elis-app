@@ -1,5 +1,6 @@
 // TODO - make order info model capable of this, copy
 
+use elis::chrono::{Local, TimeZone};
 use elis::steel_cent::formatting::us_style;
 use elis::{Invoice, LumberFobCostProvider, SiteSalesTaxProvider};
 use gtk::prelude::*;
@@ -26,14 +27,14 @@ impl InvoiceQueryResultsModel {
             Type::String, // [1] customer
             Type::String, // [2] order date
             Type::String, // [3] shipment date
-            Type::Bool,   // [4] will call
+            Type::String, // [4] will call
             Type::U32,    // [5] total pieces
             Type::String, // [6] total cost
         ]);
 
         default_center_column("Order Number", &tree_view, &mut columns);
         default_right_column("Customer", &tree_view, &mut columns);
-        default_center_column("Order Date", &tree_view, &mut columns);
+        default_center_column("Order Date (Local)", &tree_view, &mut columns);
         default_center_column("Shipment Date", &tree_view, &mut columns);
         default_center_column("Will Call", &tree_view, &mut columns);
         default_center_column("Total Pieces", &tree_view, &mut columns);
@@ -67,6 +68,8 @@ impl InvoiceQueryResultsModel {
     {
         let order_info = invoice.order_info();
         let summary = invoice.summary(db_provider);
+        let wc = if order_info.will_call() { "Yes" } else { "No" };
+        let local_time = Local.from_utc_datetime(&order_info.order_date().naive_local());
 
         self.list_store.insert_with_values(
             None,
@@ -74,9 +77,9 @@ impl InvoiceQueryResultsModel {
             &[
                 &order_info.order_number(),
                 &format!("{}", order_info.customer_name()),
-                &format!("{}", order_info.order_date().format("%m/%d/%Y")),
+                &format!("{}", local_time.format("%m/%d/%Y %H:%M:%S")),
                 &format!("{}", order_info.shipment_date().format("%m/%d/%Y")),
-                &order_info.will_call(),
+                &format!("{}", wc),
                 &(summary.total_pieces() as u32),
                 &format!("{}", us_style().display_for(summary.total_cost())),
             ],

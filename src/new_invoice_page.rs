@@ -132,10 +132,11 @@ impl NewInvoicePage {
         );
 
         items_model.tree_view.connect_cursor_changed(
-            clone!(items_model, delete_item_button, selected_item_id => move |_| {
+            clone!(items_model, delete_item_button, selected_item_id, order_info_model => move |_| {
                 let (id, selected) = items_model.get_selected();
                 selected_item_id.set(id);
                 delete_item_button.set_sensitive(selected);
+                order_info_model.unselect();
             }),
         );
 
@@ -306,6 +307,19 @@ impl NewInvoicePage {
         }),
         );
 
+        order_info_model.cell_renderers.will_call.connect_toggled(
+            clone!(invoice, order_info_model, summary_model, items_model, db_provider => move |_, _| {
+                let will_call = !invoice.borrow().order_info().will_call();
+                println!("wc {}", will_call);
+                let mut new_order_info = invoice.borrow().order_info().clone();
+                new_order_info.set_will_call(will_call);
+                invoice.borrow_mut().set_order_info(new_order_info);
+
+                refresh_items_model(&invoice.borrow(), &items_model, &db_provider);
+                summary_model.update_values(&invoice.borrow().summary(&db_provider));
+                order_info_model.update_values(invoice.borrow().order_info());
+        }));
+
         //vertical_layout.set_spacing(50);
         vertical_layout.pack_start(order_info_model.get_widget(), false, true, 0);
         vertical_layout.pack_start(items_model.get_widget(), true, true, 0);
@@ -315,7 +329,7 @@ impl NewInvoicePage {
         horizontal_layout.attach(&save_invoice_button, 3, 0, 1, 1);
         horizontal_layout.set_column_homogeneous(false);
         vertical_layout.pack_start(&horizontal_layout, false, true, 0);
-        vertical_layout.pack_start(&summary_model.tree_view, false, false, 0);
+        vertical_layout.pack_start(summary_model.get_widget(), false, false, 0);
 
         let vertical_layout: Widget = vertical_layout.upcast();
         note.create_tab("New Invoice", &vertical_layout);

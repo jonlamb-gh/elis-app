@@ -102,6 +102,7 @@ pub fn default_toggle_column(
     column.set_expand(false);
     column.set_min_width(50);
     column.pack_start(&renderer, true);
+    column.add_attribute(&renderer, "active", id);
     column.set_clickable(true);
     column.set_sort_column_id(id);
 
