@@ -157,7 +157,7 @@ pub fn build_ui(application: &gtk::Application) {
         }),
     );
 
-    window.set_title("ELIS 0.0.1");
+    window.set_title(&format!("ELIS {}", env!("CARGO_PKG_VERSION")));
     window.set_border_width(10);
     window.set_position(gtk::WindowPosition::Center);
     window.set_default_size(1024, 768);

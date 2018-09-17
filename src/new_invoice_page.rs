@@ -369,6 +369,7 @@ impl NewInvoicePage {
         order_info.set_customer_name(prev_order_info.customer_name().to_string());
         order_info.set_site_name(prev_order_info.site_name().to_string());
 
+        // TODO - order date/time should be grabbed on-submit
         let new_invoice = Invoice::new(order_info);
 
         self.save_invoice_button.set_sensitive(false);
