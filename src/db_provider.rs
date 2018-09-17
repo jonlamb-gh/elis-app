@@ -1,4 +1,4 @@
-use elis::{lumber::LumberType, LumberFobCostProvider, SiteSalesTaxProvider};
+use elis::{LumberFobCostProvider, SiteSalesTaxProvider};
 
 use elis::steel_cent::{currency, Money};
 use elis::Database;
@@ -13,7 +13,7 @@ pub struct DbProvider {
 // TODO - needs to be a result
 // TODO - must not panic inside db closures
 impl LumberFobCostProvider for DbProvider {
-    fn fob_cost(&self, lumber_type: &LumberType) -> Money {
+    fn fob_cost(&self, lumber_type: &str) -> Money {
         let mut cost = Money::zero(currency::USD);
         self.db
             .borrow()

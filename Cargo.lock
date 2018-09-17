@@ -132,7 +132,7 @@ dependencies = [
 name = "elis-app"
 version = "0.0.1"
 dependencies = [
- "elis-lib 0.0.1 (git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel)",
+ "elis-lib 0.1.0 (git+https://github.com/jonlamb-gh/elis-lib.git)",
  "gio 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -141,8 +141,8 @@ dependencies = [
 
 [[package]]
 name = "elis-lib"
-version = "0.0.1"
-source = "git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel#fabde39ef1df93b27cd43b7b039fa44ab264d20c"
+version = "0.1.0"
+source = "git+https://github.com/jonlamb-gh/elis-lib.git#06f2b8b7a9c1a4c3b7cea88c86ac197a69f92687"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "dimensioned 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -585,7 +585,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "45912881121cb26fad7c38c17ba7daa18764771836b34fab7d3fbd93ed633878"
 "checksum csv 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7ef22b37c7a51c564a365892c012dc0271221fdcc64c69b19ba4d6fa8bd96d9c"
 "checksum dimensioned 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2517b0555262aeeda0d107a40ecfbbcf185921180ffb4acf316ebe0887467e26"
-"checksum elis-lib 0.0.1 (git+https://github.com/jonlamb-gh/elis-lib.git?branch=devel)" = "<none>"
+"checksum elis-lib 0.1.0 (git+https://github.com/jonlamb-gh/elis-lib.git)" = "<none>"
 "checksum failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7efb22686e4a466b1ec1a15c2898f91fa9cb340452496dca654032de20ff95b9"
 "checksum failure_derive 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "946d0e98a50d9831f5d589038d2ca7f8f455b1c21028c0db0e84116a12696426"
 "checksum gdk 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "dd30051ff3d908ff2fc7e5776ffe1c699821e043809f294c3a61004f11d6c3a9"
